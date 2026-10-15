@@ -1,16 +1,21 @@
-const BASE_URL =
-  (typeof window !== "undefined" &&
-    (window.CH_API_URL ||
-      (["localhost", "127.0.0.1", ""].includes(window.location.hostname) || window.location.protocol === "file:" ? window.localStorage?.getItem("ch_api_url") : "") ||
-      (["thecrossedhearts.com", "www.thecrossedhearts.com"].includes(window.location.hostname)
-        ? "https://crossed-hearts-final.onrender.com/api"
-        : window.location.hostname === "crossed-hearts.onrender.com"
-          ? "https://crossed-hearts-final.onrender.com/api"
-        :
-      (["localhost", "127.0.0.1", ""].includes(window.location.hostname) ||
-      window.location.protocol === "file:"
-        ? "http://localhost:5000/api"
-        : "https://crossed-hearts-final.onrender.com/api")))) ||
-  "http://localhost:5000/api";
+const PRODUCTION_API = "https://heartsreader-backend.onrender.com/api";
+const LOCAL_API = "http://localhost:5000/api";
+
+const BASE_URL = (() => {
+  if (typeof window === "undefined") return LOCAL_API;
+  // Optional manual override (set window.CH_API_URL before this script loads)
+  if (window.CH_API_URL) return window.CH_API_URL;
+  const host = window.location.hostname;
+  const isLocal =
+    ["localhost", "127.0.0.1", ""].includes(host) || window.location.protocol === "file:";
+  if (isLocal) {
+    try {
+      return window.localStorage?.getItem("ch_api_url") || LOCAL_API;
+    } catch (e) {
+      return LOCAL_API;
+    }
+  }
+  return PRODUCTION_API;
+})();
 
 export default BASE_URL;
