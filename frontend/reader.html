@@ -1,0 +1,2960 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Apply saved theme before first paint (no flash) -->
+    <script>
+      (function () {
+        try {
+          var t =
+            localStorage.getItem("ch_theme") ||
+            localStorage.getItem("theme") ||
+            "dark";
+          var light = t === "light";
+          var r = document.documentElement;
+          r.setAttribute("data-theme", light ? "light" : "dark");
+          r.classList.toggle("light", light);
+          r.classList.toggle("light-mode", light);
+          document.addEventListener("DOMContentLoaded", function () {
+            ["light", "light-mode", "theme-light"].forEach(function (c) {
+              document.body.classList.toggle(c, light);
+            });
+            document.body.setAttribute(
+              "data-theme",
+              light ? "light" : "dark",
+            );
+          });
+        } catch (e) {}
+      })();
+    </script>
+
+    <script src="clean-urls.js"></script>
+    <meta
+      name="google-site-verification"
+      content="S9T4XiqDMXqg5zsTiZcJUyzM73NeDm0kfFlG9X9nqcA"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reader - Crossed Hearts Digital Library</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"
+    />
+    <link rel="stylesheet" href="titlepage.css" />
+    <script src="catalog.js"></script>
+    <script src="nav-search.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+      /* ════════════════════════════════════════════════════════════════════
+         READER UI — "reading desk"
+         Dark (default) + Light theme, brand-red accent.
+         ════════════════════════════════════════════════════════════════════ */
+      :root {
+        --rd-desk: #0e0d0f;
+        --rd-panel: #1a1719;
+        --rd-panel-2: #242022;
+        --rd-line: #373033;
+        --rd-text: #f4efef;
+        --rd-muted: #a69ca0;
+        --rd-accent: var(--ch-rose-deep, #e04a5f);
+        --rd-accent-dim: rgba(224, 74, 95, 0.16);
+        --rd-done: #5fd4a0;
+        --rd-on-accent: #ffffff;
+
+        --rd-glass: rgba(14, 13, 15, 0.88);
+        --rd-glass-2: rgba(26, 23, 25, 0.92);
+        --rd-shade: rgba(5, 4, 5, 0.6);
+        --rd-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+        --rd-drawer-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        --rd-page-bg: #1a1a1a;
+        --rd-page-shadow: 0 8px 48px rgba(0, 0, 0, 0.85);
+        --rd-spine: rgba(0, 0, 0, 0.35);
+        --rd-knob-off: #4a4044;
+        --rd-hdot: #4a4044;
+        --rd-error: #ff8aa1;
+        --rd-grad-a: #e04a5f;
+        --rd-grad-b: #f0a35e;
+        --rd-skel-a: #1c1819;
+        --rd-skel-b: #2a2527;
+
+        --rd-bar-h: 56px;
+        --rd-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+      }
+
+      :root[data-theme="light"],
+      body.light,
+      body.light-mode,
+      body.theme-light {
+        --rd-desk: #f7f2f0;
+        --rd-panel: #ffffff;
+        --rd-panel-2: #f2eae8;
+        --rd-line: #e4d8d5;
+        --rd-text: #231c1e;
+        --rd-muted: #756a6d;
+        --rd-accent: var(--ch-rose-deep, #c8283d);
+        --rd-accent-dim: rgba(200, 40, 61, 0.1);
+        --rd-done: #1f9d6b;
+        --rd-on-accent: #ffffff;
+
+        --rd-glass: rgba(255, 255, 255, 0.82);
+        --rd-glass-2: rgba(255, 255, 255, 0.92);
+        --rd-shade: rgba(35, 28, 30, 0.35);
+        --rd-shadow: 0 14px 40px rgba(60, 30, 36, 0.18);
+        --rd-drawer-shadow: 0 0 40px rgba(60, 30, 36, 0.18);
+        --rd-page-bg: #ece3e1;
+        --rd-page-shadow: 0 6px 28px rgba(60, 30, 36, 0.22);
+        --rd-spine: rgba(60, 30, 36, 0.18);
+        --rd-knob-off: #cfc2bf;
+        --rd-hdot: #d6c9c6;
+        --rd-error: #c8283d;
+        --rd-grad-a: #c8283d;
+        --rd-grad-b: #e8894a;
+        --rd-skel-a: #ebe2e0;
+        --rd-skel-b: #f7f1ef;
+      }
+
+      body {
+        background: var(--rd-desk);
+        color: var(--rd-text);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--rd-accent);
+        outline-offset: 2px;
+      }
+
+      /* ── Top bar ──────────────────────────────────────────────────────── */
+      .rd-bar {
+        position: fixed;
+        top: var(--nav-h, 64px);
+        left: 0;
+        right: 0;
+        height: var(--rd-bar-h);
+        z-index: 90;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        background: var(--rd-glass);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--rd-line);
+      }
+      :root[data-theme="light"] .rd-bar,
+      body.light .rd-bar,
+      body.light-mode .rd-bar,
+      body.theme-light .rd-bar {
+        box-shadow: 0 6px 20px rgba(60, 30, 36, 0.06);
+      }
+      .rd-bar-left,
+      .rd-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .rd-bar-right {
+        justify-content: flex-end;
+      }
+      .rd-heading {
+        min-width: 0;
+        text-align: center;
+        line-height: 1.2;
+      }
+      .rd-heading #readerTitle {
+        display: block;
+        font: 700 16px "Playfair Display", serif;
+        color: var(--rd-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .rd-heading #readerCh {
+        display: block;
+        margin-top: 2px;
+        font: 400 12px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .rd-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 36px;
+        padding: 0 13px;
+        border: 1px solid var(--rd-line);
+        border-radius: 10px;
+        background: var(--rd-panel);
+        color: var(--rd-text);
+        font: 500 13px "DM Sans", sans-serif;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          color 0.2s;
+      }
+      .rd-btn i {
+        font-size: 17px;
+      }
+      .rd-btn:hover,
+      .rd-btn[aria-expanded="true"] {
+        background: var(--rd-accent-dim);
+        border-color: var(--rd-accent);
+        color: var(--rd-accent);
+      }
+      .rd-icon-btn {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--rd-muted);
+        font-size: 18px;
+        cursor: pointer;
+      }
+      .rd-icon-btn:hover {
+        background: var(--rd-panel-2);
+        color: var(--rd-text);
+      }
+
+      /* ── Reading area ─────────────────────────────────────────────────── */
+      .reader-wrap {
+        padding-top: calc(
+          var(--nav-h, 64px) + var(--rd-bar-h) + 12px
+        ) !important;
+      }
+      .reader-pages {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 20px 16px 140px;
+      }
+      .reader-pages.narrow {
+        max-width: 600px;
+      }
+      .reader-pages.wide {
+        max-width: 1400px;
+      }
+
+      /* ── Double page pair layout (vertical) ──────────────────────────── */
+      .double-pair {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+      .double-pair .pdf-page-wrap {
+        flex: 1;
+        margin-bottom: 0;
+      }
+      .double-pair.rtl {
+        flex-direction: row-reverse;
+      }
+      .double-pair.solo .pdf-page-wrap {
+        flex: 0 0 calc(50% - 3px);
+      }
+      .double-pair.solo.spread .pdf-page-wrap {
+        flex: 1;
+      }
+      .double-pair:not(.solo) .pdf-page-wrap:first-child {
+        box-shadow: 10px 0 24px -10px var(--rd-spine);
+      }
+
+      /* book spine shadow (horizontal mode) */
+      .horiz-slide.is-spread .horiz-page-wrap:first-child {
+        box-shadow: var(--rd-page-shadow);
+      }
+      .horiz-slide.is-spread .horiz-page-wrap:nth-child(1)::before,
+      .horiz-slide.is-spread .horiz-page-wrap:nth-child(2)::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 22px;
+        z-index: 4;
+        pointer-events: none;
+      }
+      .horiz-slide.is-spread .horiz-page-wrap:nth-child(1)::before {
+        right: 0;
+        background: linear-gradient(to left, var(--rd-spine), transparent);
+      }
+      .horiz-slide.is-spread .horiz-page-wrap:nth-child(2)::before {
+        left: 0;
+        background: linear-gradient(to right, var(--rd-spine), transparent);
+      }
+      .horiz-slide.is-spread.rtl-slide .horiz-page-wrap:nth-child(1)::before {
+        right: auto;
+        left: 0;
+        background: linear-gradient(to right, var(--rd-spine), transparent);
+      }
+      .horiz-slide.is-spread.rtl-slide .horiz-page-wrap:nth-child(2)::before {
+        left: auto;
+        right: 0;
+        background: linear-gradient(to left, var(--rd-spine), transparent);
+      }
+      #horizStrip .horiz-slide {
+        gap: 0;
+      }
+
+      /* ── PDF page wrappers ───────────────────────────────────────────── */
+      .pdf-page-wrap {
+        position: relative;
+        margin-bottom: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+        background: var(--rd-page-bg);
+        line-height: 0;
+      }
+      .pdf-page-wrap .page-shield {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        background: transparent;
+        cursor: default;
+      }
+      .pdf-page-wrap canvas {
+        width: 100% !important;
+        height: auto !important;
+        display: block;
+        pointer-events: none;
+      }
+      .pdf-page-skeleton {
+        width: 100%;
+        aspect-ratio: 0.707;
+        background: linear-gradient(
+          90deg,
+          var(--rd-skel-a) 25%,
+          var(--rd-skel-b) 50%,
+          var(--rd-skel-a) 75%
+        );
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.5s infinite;
+        border-radius: 3px;
+      }
+      @keyframes skeleton-shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      /* ── Floating dock (chapter nav + page + progress) ───────────────── */
+      .rd-dock {
+        position: fixed;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        z-index: 110;
+        width: min(640px, calc(100vw - 24px));
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        align-items: center;
+        gap: 12px;
+        padding: 8px;
+        border: 1px solid var(--rd-line);
+        border-radius: 18px;
+        background: var(--rd-glass-2);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--rd-shadow);
+      }
+      .rd-dock-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--rd-panel-2);
+        color: var(--rd-text);
+        font: 600 13px "DM Sans", sans-serif;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          opacity 0.2s;
+      }
+      .rd-dock-btn i {
+        font-size: 18px;
+      }
+      .rd-dock-btn:hover:not(:disabled) {
+        background: var(--rd-accent);
+        color: var(--rd-on-accent);
+      }
+      .rd-dock-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .rd-dock-mid {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      #pageIndicator {
+        font: 500 12px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+        text-align: center;
+        white-space: nowrap;
+      }
+      #pageIndicator.hidden {
+        display: none;
+      }
+      .rd-track {
+        height: 6px;
+        border-radius: 99px;
+        background: var(--rd-panel-2);
+        overflow: hidden;
+      }
+      #progressFill {
+        height: 100%;
+        width: 0%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, var(--rd-grad-a), var(--rd-grad-b));
+        transition: width 0.25s ease;
+      }
+      #progressPct {
+        min-width: 38px;
+        font: 700 12px "DM Sans", sans-serif;
+        color: var(--rd-text);
+        text-align: right;
+      }
+
+      /* ── Page arrows ─────────────────────────────────────────────────── */
+      .vert-arrow-btn,
+      .horiz-bc-btn {
+        position: fixed;
+        z-index: 100;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--rd-line);
+        border-radius: 50%;
+        background: var(--rd-glass-2);
+        color: var(--rd-muted);
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        transition:
+          background 0.2s,
+          color 0.2s,
+          border-color 0.2s,
+          opacity 0.2s;
+      }
+      .vert-arrow-btn:hover,
+      .horiz-bc-btn:hover {
+        background: var(--rd-accent-dim);
+        border-color: var(--rd-accent);
+        color: var(--rd-accent);
+      }
+      .vert-arrow-btn.hidden,
+      .horiz-bc-btn.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .vert-arrow-btn {
+        right: 20px;
+      }
+      #vertPrevBtn {
+        bottom: 76px;
+      }
+      #vertNextBtn {
+        bottom: 24px;
+      }
+      .horiz-bc-btn {
+        position: absolute;
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-50%);
+      }
+      #horizPrevBc {
+        left: 18px;
+      }
+      #horizNextBc {
+        right: 18px;
+      }
+      #horizViewer.rtl-dir #horizPrevBc {
+        left: auto;
+        right: 18px;
+      }
+      #horizViewer.rtl-dir #horizNextBc {
+        right: auto;
+        left: 18px;
+      }
+
+      /* ── Drawers (chapters left, settings right) ─────────────────────── */
+      .rd-drawer {
+        position: fixed;
+        bottom: 0;
+        top: var(--side-top, 120px);
+        z-index: 120;
+        width: 310px;
+        display: flex;
+        flex-direction: column;
+        background: var(--rd-panel);
+        transition: transform 0.38s var(--rd-ease);
+      }
+      #chSide {
+        left: 0;
+        border-right: 1px solid var(--rd-line);
+        transform: translateX(-102%);
+      }
+      #settingsDrawer {
+        right: 0;
+        border-left: 1px solid var(--rd-line);
+        transform: translateX(102%);
+      }
+      body.side-open #chSide,
+      body.set-open #settingsDrawer {
+        transform: none;
+        box-shadow: var(--rd-drawer-shadow);
+      }
+      #chSideShade {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 115;
+        background: var(--rd-shade);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      body.set-open #chSideShade,
+      body.side-open.horiz-on #chSideShade {
+        display: block;
+        opacity: 1;
+      }
+      @media (min-width: 1100px) {
+        body.side-open:not(.horiz-on) .reader-wrap {
+          padding-left: 310px;
+        }
+        .reader-wrap {
+          transition: padding-left 0.38s var(--rd-ease);
+        }
+      }
+      @media (max-width: 1099px) {
+        body.side-open #chSideShade {
+          display: block;
+          opacity: 1;
+        }
+        .rd-drawer {
+          width: min(320px, 88vw);
+        }
+      }
+
+      .rd-drawer-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 18px 16px 14px;
+        border-bottom: 1px solid var(--rd-line);
+      }
+      .rd-drawer-head h4,
+      .cs-head h4 {
+        margin: 0;
+        font: 700 17px "Playfair Display", serif;
+        color: var(--rd-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* chapter list */
+      .cs-head {
+        padding: 18px 16px 14px;
+        border-bottom: 1px solid var(--rd-line);
+      }
+      .cs-head small {
+        display: block;
+        margin: 4px 0 12px;
+        font: 400 12px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+      }
+      .cs-total {
+        height: 5px;
+        border-radius: 99px;
+        background: var(--rd-panel-2);
+        overflow: hidden;
+      }
+      .cs-total u {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: 99px;
+        background: var(--rd-done);
+        transition: width 0.5s ease;
+      }
+      .cs-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px 10px 28px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--rd-line) transparent;
+      }
+      .cs-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 30px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        width: 100%;
+        text-align: left;
+        padding: 11px 12px 14px;
+        margin-bottom: 4px;
+        border: 0;
+        border-left: 3px solid transparent;
+        border-radius: 4px 12px 12px 4px;
+        background: none;
+        color: var(--rd-muted);
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+      .cs-item:hover {
+        background: var(--rd-panel-2);
+        color: var(--rd-text);
+      }
+      .cs-item.on {
+        background: var(--rd-accent-dim);
+        border-left-color: var(--rd-accent);
+        color: var(--rd-text);
+      }
+      .cs-n {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        font: 700 12px "DM Sans", sans-serif;
+        background: var(--rd-panel-2);
+      }
+      .cs-item.on .cs-n {
+        background: var(--rd-accent);
+        color: var(--rd-on-accent);
+      }
+      .cs-item.done .cs-n {
+        background: rgba(95, 212, 160, 0.18);
+        color: var(--rd-done);
+      }
+      .cs-t b {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cs-t small {
+        font-size: 11px;
+        color: var(--rd-muted);
+      }
+      .cs-st {
+        font-size: 12px;
+        color: var(--rd-muted);
+      }
+      .cs-item.done .cs-st {
+        color: var(--rd-done);
+      }
+      .cs-bar {
+        position: absolute;
+        left: 54px;
+        right: 12px;
+        bottom: 6px;
+        height: 3px;
+        border-radius: 99px;
+        background: var(--rd-panel-2);
+        overflow: hidden;
+      }
+      .cs-bar u {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--rd-accent);
+        border-radius: 99px;
+        transition: width 0.3s ease;
+      }
+
+      /* settings content */
+      .rd-set-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 16px 28px;
+      }
+      .rd-set-body h5 {
+        margin: 22px 0 10px;
+        font: 600 13px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+      }
+      .rd-modes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      #settingsDrawer .view-mode-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px;
+        min-height: 0;
+        border: 1px solid var(--rd-line);
+        border-radius: 12px;
+        background: var(--rd-panel-2);
+        color: var(--rd-muted);
+        font: 500 12px/1.3 "DM Sans", sans-serif;
+        text-align: left;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          color 0.2s,
+          background 0.2s;
+      }
+      #settingsDrawer .view-mode-btn small {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 400;
+        opacity: 0.75;
+      }
+      #settingsDrawer .view-mode-btn:hover {
+        color: var(--rd-text);
+        border-color: var(--rd-muted);
+      }
+      #settingsDrawer .view-mode-btn.active {
+        background: var(--rd-accent-dim);
+        border-color: var(--rd-accent);
+        color: var(--rd-accent);
+      }
+
+      .rd-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 12px 14px;
+        border: 1px solid var(--rd-line);
+        border-radius: 12px;
+        background: var(--rd-panel-2);
+        color: var(--rd-text);
+        text-align: left;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+      }
+      .rd-switch b {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .rd-switch small {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--rd-muted);
+      }
+      .rd-knob {
+        position: relative;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 22px;
+        border-radius: 99px;
+        background: var(--rd-knob-off);
+        transition: background 0.2s;
+      }
+      .rd-knob::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s var(--rd-ease);
+      }
+      .rd-switch.active .rd-knob {
+        background: var(--rd-accent);
+      }
+      .rd-switch.active .rd-knob::after {
+        transform: translateX(18px);
+      }
+
+      .zoom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 10px 8px 14px;
+        border: 1px solid var(--rd-line);
+        border-radius: 12px;
+        background: var(--rd-panel-2);
+        color: var(--rd-text);
+        font: 600 13px "DM Sans", sans-serif;
+      }
+      .zoom-controls .zoom-ctl {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .zoom-btn {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--rd-line);
+        border-radius: 10px;
+        background: var(--rd-panel);
+        color: var(--rd-text);
+        font-size: 18px;
+        cursor: pointer;
+      }
+      .zoom-btn:hover {
+        border-color: var(--rd-accent);
+        color: var(--rd-accent);
+      }
+      .zoom-label {
+        min-width: 48px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--rd-text);
+      }
+
+      /* ── Loading, end card, errors ───────────────────────────────────── */
+      .pdf-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 24px;
+        gap: 20px;
+        color: var(--rd-muted);
+        font: 400 15px "DM Sans", sans-serif;
+      }
+      .pdf-loading-ring {
+        width: 44px;
+        height: 44px;
+        border: 3px solid var(--rd-line);
+        border-top-color: var(--rd-accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .reader-end {
+        margin-top: 28px;
+        padding: 44px 28px;
+        text-align: center;
+        border: 1px solid var(--rd-line);
+        border-radius: 20px;
+        background: var(--rd-panel);
+      }
+      .reader-end h3 {
+        margin: 0 0 8px;
+        font: 700 24px "Playfair Display", serif;
+        color: var(--rd-text);
+      }
+      .reader-end p {
+        margin: 0 0 24px;
+        font: 400 15px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+      }
+      .pdf-error {
+        text-align: center;
+        padding: 60px 24px;
+      }
+      .pdf-error h3 {
+        margin: 0 0 12px;
+        font: 700 24px "Playfair Display", serif;
+        color: var(--rd-error);
+      }
+      .pdf-error p {
+        margin: 0 0 24px;
+        font: 400 15px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+      }
+
+      /* ══════════════════════════════════════════════════════════════════
+         HORIZONTAL VIEWER
+         ══════════════════════════════════════════════════════════════════ */
+      #horizViewer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--rd-desk);
+        z-index: 50;
+        overflow: hidden;
+        user-select: none;
+        flex-direction: column;
+      }
+      #horizViewer.active {
+        display: flex;
+      }
+      #horizTrack {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        overflow-x: hidden;
+        overflow-y: auto;
+        position: relative;
+        cursor: grab;
+      }
+      #horizTrack.dragging {
+        cursor: grabbing;
+      }
+      #horizStrip {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        transition: transform 220ms ease-out;
+        will-change: transform;
+      }
+      #horizStrip.no-transition {
+        transition: none;
+      }
+      .horiz-slide {
+        flex: 0 0 100vw;
+        width: 100vw;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 72px;
+        box-sizing: border-box;
+      }
+      .horiz-page-wrap {
+        position: relative;
+        flex: 0 0 auto;
+        line-height: 0;
+        border-radius: 3px;
+        overflow: hidden;
+        background: var(--rd-page-bg);
+        box-shadow: var(--rd-page-shadow);
+      }
+      .horiz-page-wrap .page-shield {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        background: transparent;
+        cursor: default;
+      }
+      .horiz-page-wrap canvas {
+        display: block;
+        pointer-events: none;
+      }
+      .horiz-page-wrap .pdf-page-skeleton {
+        background: linear-gradient(
+          90deg,
+          var(--rd-skel-a) 25%,
+          var(--rd-skel-b) 50%,
+          var(--rd-skel-a) 75%
+        );
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.5s infinite;
+      }
+      /* indicator leaves room for the floating dock */
+      #horizIndicator {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 0 92px;
+        z-index: 60;
+        pointer-events: none;
+        min-height: 40px;
+      }
+      #horizDots {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .hdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--rd-hdot);
+        transition: all 0.2s;
+        flex: 0 0 auto;
+      }
+      .hdot.active {
+        background: var(--rd-accent);
+        transform: scale(1.5);
+      }
+      #horizCounter {
+        display: none;
+        padding: 4px 14px;
+        border: 1px solid var(--rd-line);
+        border-radius: 20px;
+        background: var(--rd-panel);
+        font: 500 12px "DM Sans", sans-serif;
+        color: var(--rd-muted);
+      }
+
+      /* ── Small screens ───────────────────────────────────────────────── */
+      @media (max-width: 760px) {
+        .rd-bar {
+          padding: 0 10px;
+          gap: 8px;
+        }
+        .rd-btn span {
+          display: none;
+        }
+        .rd-btn {
+          padding: 0 10px;
+        }
+        .rd-dock-btn span {
+          display: none;
+        }
+        .rd-dock-btn {
+          padding: 0 12px;
+        }
+        .vert-arrow-btn {
+          display: none;
+        }
+        .horiz-slide {
+          padding: 0 44px;
+        }
+        .horiz-bc-btn {
+          width: 38px;
+          height: 38px;
+        }
+        #horizPrevBc {
+          left: 6px;
+        }
+        #horizNextBc {
+          right: 6px;
+        }
+        #horizViewer.rtl-dir #horizPrevBc {
+          right: 6px;
+        }
+        #horizViewer.rtl-dir #horizNextBc {
+          left: 6px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media print {
+        body * {
+          visibility: hidden !important;
+        }
+        body::before {
+          content: "Printing is disabled for Crossed Hearts protected reader content.";
+          visibility: visible !important;
+          display: block;
+          padding: 40px;
+          font-family: Arial, sans-serif;
+          color: #111;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="reader-active">
+    <!-- NAV -->
+    <nav class="nav" id="mainNav">
+      <a class="nav-logo" href="index.html">
+        <img
+          src="Images/logo-dark.png"
+          alt="Crossed Hearts Logo"
+          class="nav-logo-img nav-logo-dark"
+        />
+        <img
+          src="Images/logo-light.png"
+          alt="Crossed Hearts Logo"
+          class="nav-logo-img nav-logo-light"
+        />
+        <div class="nav-logo-text">
+          <span class="nav-logo-main">Crossed Hearts</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="comics.html">Comics</a></li>
+        <li><a href="manga.html">Manga</a></li>
+        <li><a href="novel.html">Novel</a></li>
+        <li>
+          <a href="print.html">Print</a>
+        </li>
+      </ul>
+      <div class="nav-actions">
+        <div class="nav-search-inline" id="navSearchInline" role="search">
+          <input
+            type="text"
+            class="nav-search-inline-input"
+            id="navSearchInlineInput"
+            placeholder="Search..."
+            autocomplete="off"
+            readonly
+            aria-label="Search titles, genres, keywords"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            onclick="openNavSearch()"
+            onfocus="openNavSearch()"
+            onkeydown="if (event.key === 'Enter') openNavSearch();"
+          />
+          <button
+            class="nav-search-inline-btn"
+            id="navSearchInlineBtn"
+            onclick="openNavSearch()"
+            aria-label="Open search"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+        </div>
+        <a href="my-library.html" class="btn-nav-ghost btn-nav-lib"
+          >Library</a
+        >
+        
+        <a href="account.html" class="btn-nav-ghost">My Account</a>
+        <button
+          class="btn-nav-signin"
+          id="navAuthBtn"
+          data-login-label="Sign In"
+          onclick="handleNavAuth()"
+        >
+          Sign In
+        </button>
+        <button
+          class="btn-nav-register"
+          id="navRegisterBtn"
+          onclick="openAuth('up', { lockMode: true })"
+        >
+          Sign Up
+        </button>
+        <button
+          class="theme-toggle"
+          id="themeToggle"
+          onclick="toggleTheme()"
+          aria-label="Toggle theme"
+        >
+          <span class="icon-dark"
+            ><i class="ti ti-moon" aria-hidden="true"></i
+          ></span>
+          <span class="icon-light"
+            ><i class="ti ti-sun" aria-hidden="true"></i
+          ></span>
+        </button>
+        <button
+          class="nav-burger"
+          onclick="toggleMobileNav()"
+          aria-label="Open menu"
+        >
+          <i class="ti ti-menu-2" aria-hidden="true"></i>
+        </button>
+      </div>
+    </nav>
+
+    <div class="mobile-nav-overlay" id="mobileOverlay"></div>
+    <div class="mobile-nav" id="mobileNav">
+      <div class="mobile-nav-top">
+        <span
+          style="
+            font-size: 11px;
+            color: var(--muted);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+          "
+          >Menu</span
+        >
+      </div>
+      <a href="index.html">Home</a>
+      <a href="comics.html">Comics</a>
+      <a href="manga.html">Manga</a>
+      <a href="novel.html">Novel</a>
+      <a
+        href="campaigns.html"
+        style="color: var(--ch-rose-deep); font-weight: 700"
+        >Campaigns</a
+      >
+      <a
+        href="#"
+        onclick="
+          handleNavAuth();
+          toggleMobileNav();
+        "
+        style="color: var(--gold)"
+        id="mobileAuthLink"
+        data-login-label="Sign In"
+        >Sign In</a
+      >
+      <a
+        href="#"
+        onclick="
+          openAuth('up', { lockMode: true });
+          toggleMobileNav();
+        "
+        style="color: var(--gold)"
+        id="mobileRegisterLink"
+        >Sign Up</a
+      >
+    </div>
+
+    <!-- ══ TOP BAR ══════════════════════════════════════════════════════════ -->
+    <header class="rd-bar" id="readerTopbar">
+      <div class="rd-bar-left">
+        <button
+          class="rd-btn"
+          onclick="goBack()"
+          aria-label="Back to title page"
+        >
+          <i class="ti ti-arrow-left" aria-hidden="true"></i><span>Back</span>
+        </button>
+        <button
+          class="rd-btn"
+          id="chSideBtn"
+          onclick="toggleSide()"
+          title="Chapter list"
+          aria-label="Open chapter list"
+        >
+          <i class="ti ti-list-details" aria-hidden="true"></i
+          ><span>Chapters</span>
+        </button>
+      </div>
+
+      <div class="rd-heading">
+        <span id="readerTitle">Loading…</span>
+        <span id="readerCh">-</span>
+      </div>
+
+      <div class="rd-bar-right">
+        <button
+          class="rd-btn"
+          id="settingsBtn"
+          onclick="toggleSettings()"
+          title="Reading settings"
+          aria-label="Open reading settings"
+          aria-expanded="false"
+        >
+          <i class="ti ti-adjustments-horizontal" aria-hidden="true"></i
+          ><span>Settings</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ══ CHAPTER DRAWER (left) ════════════════════════════════════════════ -->
+    <div
+      id="chSideShade"
+      onclick="
+        toggleSide(false);
+        toggleSettings(false);
+      "
+    ></div>
+    <aside id="chSide" class="rd-drawer" aria-label="Chapter list">
+      <div class="cs-head">
+        <h4 id="csTitle">Chapters</h4>
+        <small id="csSub"></small>
+        <div class="cs-total"><u id="csTotal"></u></div>
+      </div>
+      <div class="cs-list" id="csList"></div>
+    </aside>
+
+    <!-- ══ SETTINGS DRAWER (right) ══════════════════════════════════════════ -->
+    <aside id="settingsDrawer" class="rd-drawer" aria-label="Reading settings">
+      <div class="rd-drawer-head">
+        <h4>Reading settings</h4>
+        <button
+          class="rd-icon-btn"
+          onclick="toggleSettings(false)"
+          aria-label="Close settings"
+        >
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="rd-set-body">
+        <h5>Page layout</h5>
+        <div class="rd-modes" id="viewModeGroup">
+          <button
+            class="view-mode-btn active"
+            id="vmSingleV"
+            onclick="setViewMode('single-vert', this)"
+            title="Single page · Vertical scroll"
+          >
+            <svg width="14" height="18" viewBox="0 0 14 18">
+              <rect
+                x="2"
+                y="1"
+                width="10"
+                height="16"
+                rx="1"
+                fill="currentColor"
+                opacity=".9"
+              />
+            </svg>
+            <span>Single page<small>Scroll down</small></span>
+          </button>
+          <button
+            class="view-mode-btn"
+            id="vmDoubleV"
+            onclick="setViewMode('double-vert', this)"
+            title="Double page · Vertical scroll"
+          >
+            <svg width="20" height="18" viewBox="0 0 20 18">
+              <rect
+                x="1"
+                y="1"
+                width="8"
+                height="16"
+                rx="1"
+                fill="currentColor"
+                opacity=".9"
+              />
+              <rect
+                x="11"
+                y="1"
+                width="8"
+                height="16"
+                rx="1"
+                fill="currentColor"
+                opacity=".7"
+              />
+            </svg>
+            <span>Two pages<small>Scroll down</small></span>
+          </button>
+          <button
+            class="view-mode-btn"
+            id="vmSingleH"
+            onclick="setViewMode('single-horiz', this)"
+            title="Single page · Horizontal"
+          >
+            <svg width="20" height="18" viewBox="0 0 20 18">
+              <rect
+                x="5"
+                y="1"
+                width="10"
+                height="16"
+                rx="1"
+                fill="currentColor"
+                opacity=".9"
+              />
+              <path
+                d="M1 9h3M16 9h3"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>Single page<small>Flip sideways</small></span>
+          </button>
+          <button
+            class="view-mode-btn"
+            id="vmDoubleH"
+            onclick="setViewMode('double-horiz', this)"
+            title="Double page · Horizontal"
+          >
+            <svg width="24" height="18" viewBox="0 0 24 18">
+              <rect
+                x="2"
+                y="1"
+                width="8"
+                height="16"
+                rx="1"
+                fill="currentColor"
+                opacity=".9"
+              />
+              <rect
+                x="14"
+                y="1"
+                width="8"
+                height="16"
+                rx="1"
+                fill="currentColor"
+                opacity=".7"
+              />
+              <path
+                d="M0 9h1.5M22.5 9h1.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>Two pages<small>Flip sideways</small></span>
+          </button>
+        </div>
+
+        <h5>Reading flow</h5>
+        <div id="readOpts">
+          <button
+            class="rd-switch"
+            id="dirBtn"
+            onclick="toggleReadDir()"
+            title="Reading direction (manga reads right-to-left)"
+          >
+            <span>
+              <b>Right-to-left reading</b>
+              <small id="dirLabel">Left → Right</small>
+            </span>
+            <span class="rd-knob"></span>
+          </button>
+          <button
+            class="rd-switch active"
+            id="coverBtn"
+            onclick="toggleCoverAlone()"
+            title="Show the first page alone, like a printed book"
+          >
+            <span>
+              <b>Cover on its own</b>
+              <small>First page stands alone in two-page views</small>
+            </span>
+            <span class="rd-knob"></span>
+          </button>
+        </div>
+
+        <h5>Zoom</h5>
+        <div class="zoom-controls">
+          <span>Page size</span>
+          <div class="zoom-ctl">
+            <button
+              class="zoom-btn"
+              onclick="changeZoom(-0.1)"
+              aria-label="Zoom out"
+            >
+              &#8722;
+            </button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <button
+              class="zoom-btn"
+              onclick="changeZoom(0.1)"
+              aria-label="Zoom in"
+            >
+              &#43;
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══ FLOATING DOCK ════════════════════════════════════════════════════ -->
+    <div class="rd-dock" id="rdDock">
+      <button class="rd-dock-btn" id="prevBtn" onclick="changeChapter(-1)">
+        <i class="ti ti-chevron-left" aria-hidden="true"></i
+        ><span>Previous</span>
+      </button>
+      <div class="rd-dock-mid">
+        <div id="pageIndicator">Loading…</div>
+        <div class="rd-track"><div id="progressFill"></div></div>
+      </div>
+      <span id="progressPct">0%</span>
+      <button class="rd-dock-btn" id="nextBtn" onclick="changeChapter(1)">
+        <span>Next</span><i class="ti ti-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- ── Vertical navigation arrows ─────────────────────────────────────── -->
+    <button
+      class="vert-arrow-btn hidden"
+      id="vertPrevBtn"
+      onclick="vertNav(-1)"
+      title="Previous page"
+    >
+      &#8593;
+    </button>
+    <button
+      class="vert-arrow-btn"
+      id="vertNextBtn"
+      onclick="vertNav(1)"
+      title="Next page"
+    >
+      &#8595;
+    </button>
+
+    <!-- ══ HORIZONTAL VIEWER OVERLAY ════════════════════════════════════════ -->
+    <div id="horizViewer">
+      <div id="horizTrack">
+        <div id="horizStrip"></div>
+        <button
+          class="horiz-bc-btn hidden"
+          id="horizPrevBc"
+          onclick="horizNav(-1)"
+          title="Previous page"
+        >
+          &#8592;
+        </button>
+        <button
+          class="horiz-bc-btn"
+          id="horizNextBc"
+          onclick="horizNav(1)"
+          title="Next page"
+        >
+          &#8594;
+        </button>
+      </div>
+      <div id="horizIndicator">
+        <div id="horizDots"></div>
+        <div id="horizCounter"></div>
+      </div>
+    </div>
+
+    <!-- ── Vertical scroll reader ─────────────────────────────────────────── -->
+    <div class="reader-wrap">
+      <div class="reader-pages" id="readerPages">
+        <div class="pdf-loading">
+          <div class="pdf-loading-ring"></div>
+          <span>Loading your chapter…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Modals ─────────────────────────────────────────────────────────── -->
+    <div
+      class="modal-overlay"
+      id="payOverlay"
+      onclick="if (event.target === this) closePayModal();"
+    >
+      <div class="modal">
+        <button class="modal-x" onclick="closePayModal()">✕</button>
+        <div class="modal-title" id="payModalTitle">Unlock Chapter</div>
+        <div class="modal-sub" id="payModalSub">
+          Purchase to continue reading
+        </div>
+        <div id="payBody"></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="authOverlay" onclick="closeAuthIfBg(event)">
+      <div class="modal">
+        <button class="modal-x" onclick="closeAuth()">✕</button>
+        <div class="modal-title">Sign In to Continue</div>
+        <div class="modal-sub">Create an account or sign in to read</div>
+        <div class="auth-tabs">
+          <button class="atab active" onclick="switchAuth('in', this)">
+            Sign In
+          </button>
+          <button class="atab" onclick="switchAuth('up', this)">
+            Create Account
+          </button>
+        </div>
+        <div id="authBody"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      window.CH_API_URL = [
+        "thecrossedhearts.com",
+        "www.thecrossedhearts.com",
+      ].includes(window.location.hostname)
+        ? "https://crossed-hearts-final.onrender.com/api"
+        : window.location.hostname === "crossed-hearts.onrender.com"
+          ? "https://crossed-hearts-final.onrender.com/api"
+          : ["localhost", "127.0.0.1", ""].includes(window.location.hostname) ||
+              window.location.protocol === "file:"
+            ? "http://localhost:5000/api"
+            : "https://crossed-hearts-final.onrender.com/api";
+    </script>
+    <script src="script.js"></script>
+    <script>
+      "use strict";
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // THEME TOGGLE (dark ⇄ light) — overrides any missing/broken toggleTheme
+      // ══════════════════════════════════════════════════════════════════════════
+      function applyTheme(mode) {
+        const light = mode === "light";
+        const root = document.documentElement;
+        root.setAttribute("data-theme", light ? "light" : "dark");
+        root.classList.toggle("light", light);
+        root.classList.toggle("light-mode", light);
+        document.body.setAttribute("data-theme", light ? "light" : "dark");
+        ["light", "light-mode", "theme-light"].forEach((c) =>
+          document.body.classList.toggle(c, light),
+        );
+        try {
+          localStorage.setItem("ch_theme", light ? "light" : "dark");
+          localStorage.setItem("theme", light ? "light" : "dark");
+        } catch (e) {}
+      }
+      window.toggleTheme = function () {
+        const isLight =
+          document.documentElement.getAttribute("data-theme") === "light";
+        applyTheme(isLight ? "dark" : "light");
+      };
+      applyTheme(
+        (function () {
+          try {
+            return (
+              localStorage.getItem("ch_theme") ||
+              localStorage.getItem("theme") ||
+              "dark"
+            );
+          } catch (e) {
+            return "dark";
+          }
+        })(),
+      );
+
+      // ── PDF.js worker ──────────────────────────────────────────────────────────
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // TITLE & CHAPTER DATA
+      // chap(id, label, free, pdfSrc, extra) keeps each entry on one line.
+      // Add  dir: "rtl"  or  dir: "ltr"  to a title to force reading direction.
+      // ══════════════════════════════════════════════════════════════════════════
+      const chap = (id, label, free, pdfSrc, extra) =>
+        Object.assign(
+          { id, label, free, price: free ? 0 : 0.99, pdfSrc },
+          extra || {},
+        );
+      const SAMPLE = "assets/sample.pdf";
+      // Standard placeholder chapter set: ch1 free, the rest paid
+      const stdChapters = (n) =>
+        Array.from({ length: n }, (_, i) =>
+          chap(
+            "ch" + (i + 1),
+            "Chapter " + (i + 1) + " - chapter name",
+            i === 0,
+            SAMPLE,
+          ),
+        );
+
+      const READER_DATA = {
+        "chigaya-v1": {
+          title: "You're Way Too Cheeky, Chigaya-kun! Vol.1",
+          backUrl: "chigaya-vol1.html",
+          volumePrice: 7.99,
+          chapters: stdChapters(4),
+        },
+        "chigaya-v2": {
+          title: "You're Way Too Cheeky, Chigaya-kun! Vol.2",
+          backUrl: "chigaya-vol2.html",
+          volumePrice: 7.99,
+          chapters: stdChapters(4),
+        },
+        "grenimal-v1": {
+          title: "The Executioner of Grenimal Vol.1",
+          backUrl: "executioner-vol1.html",
+          volumePrice: 7.99,
+          chapters: [
+            chap("ch1", "Chapter 1 - EOG 00-01", true, null, {
+              bookId: "6a06f982f4a68f854c871f9f",
+            }),
+            chap("ch2", "Chapter 2 - EOG 02-05", false, null, {
+              bookId: "6a06f982f4a68f854c871fa0",
+            }),
+            chap("ch3", "Chapter 3 - chapter name", false, SAMPLE),
+          ],
+        },
+        "grenimal-v2": {
+          title: "The Executioner of Grenimal Vol.2",
+          backUrl: "executioner-vol2.html",
+          volumePrice: 7.99,
+          chapters: stdChapters(3),
+        },
+        "matchmaker-v1": {
+          title: "The Matchmaker's Fiancé Vol.1",
+          backUrl: "matchmaker-vol1.html",
+          volumePrice: 7.99,
+          chapters: stdChapters(4),
+        },
+        "connie-v1": {
+          title: "All-Rounder Maid Connie Ville Vol.1",
+          backUrl: "allrounder-vol1.html",
+          volumePrice: 6.99,
+          chapters: [
+            chap("ch1", "Chapter 1 - chapter name", true, SAMPLE),
+            chap("ch2", "Chapter 2 - chapter name", false, SAMPLE),
+            chap("ch3", "Chapter 3 - chapter name", false, SAMPLE),
+            chap("ch4", "Chapter 4 - Covert Mission", false, SAMPLE),
+          ],
+        },
+        "connie-v2": {
+          title: "All-Rounder Maid Connie Ville Vol.2",
+          backUrl: "allrounder-vol2.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(4),
+        },
+        "royal-v1": {
+          title: "The Royal's Secret Vol.1",
+          backUrl: "royal-vol1.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(4),
+        },
+        "pale-v2": {
+          title: "A Pale Moon Reverie Vol.2",
+          backUrl: "pale-vol2.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(4),
+        },
+        borrowing: {
+          title: "Borrowing Your Textbook 175160",
+          backUrl: "borrowing.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(4),
+        },
+        timecloset: {
+          title: "Time is a Closet",
+          backUrl: "timeisa.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(2),
+        },
+        afternoontea: {
+          title: "Afternoon Tea for Two",
+          backUrl: "afternoon.html",
+          volumePrice: 6.99,
+          chapters: [
+            chap(
+              "ch1",
+              "Chapter 1 - chapter name",
+              true,
+              "assets/chapter%2001.pdf",
+            ),
+            chap("ch2", "Chapter 2 - chapter name", false, SAMPLE),
+            chap("ch3", "Chapter 3 - chapter name", false, SAMPLE),
+          ],
+        },
+        "zombie-v1": {
+          title: "The Abandoned Villainess Became a Zombie Vol.1",
+          backUrl: "abandonedvillainess-vol1.html",
+          volumePrice: 9.99,
+          chapters: stdChapters(3),
+        },
+        "zombie-v2": {
+          title: "The Abandoned Villainess Became a Zombie Vol.2",
+          backUrl: "abandonedvillainess-vol2.html",
+          volumePrice: 9.99,
+          chapters: stdChapters(3),
+        },
+        "sister-v1": {
+          title: "Sister Mafioso",
+          backUrl: "sistermafioso.html",
+          volumePrice: 9.99,
+          chapters: stdChapters(3),
+        },
+        "raeliana-v1": {
+          title: "Why Raeliana Ended Up at the Duke's Mansion Vol.1",
+          backUrl: "whyraeliana-vol1.html",
+          volumePrice: 9.99,
+          chapters: stdChapters(3),
+        },
+        "raeliana-v2": {
+          title: "Why Raeliana Ended Up at the Duke's Mansion Vol.2",
+          backUrl: "whyraeliana-vol2.html",
+          volumePrice: 9.99,
+          chapters: stdChapters(3),
+        },
+        // until: {
+        //   title: "Until We Fall In Love",
+        //   backUrl: "until.html",
+        //   volumePrice: 6.99,
+        //   chapters: stdChapters(3),
+        // },
+        until: {
+          title: "Until We Fall In Love",
+          backUrl: "until.html",
+          volumePrice: 6.99,
+          chapters: [
+            chap(
+              "ch1",
+              "Chapter 1 - chapter name",
+              true,
+              "assets/until-chp1.pdf",
+            ),
+            chap("ch2", "Chapter 2 - chapter name", false, SAMPLE),
+            chap("ch3", "Chapter 3 - chapter name", false, SAMPLE),
+          ],
+        },
+        theking: {
+          title: "The King of Owls and His Troubled Attendant",
+          backUrl: "theking.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(3),
+        },
+        "roommate-vol1": {
+          title: "Roommate",
+          backUrl: "room-vol1.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(3),
+        },
+        thebird: {
+          title: "The Bird In The Cage Dreams",
+          backUrl: "thebird.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(3),
+        },
+        gaze: {
+          title: "A Gaze Like Lightning",
+          backUrl: "gaze.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(3),
+        },
+        "roommate-vol2": {
+          title: "Roommate Vol.2",
+          backUrl: "room-vol2.html",
+          volumePrice: 6.99,
+          chapters: stdChapters(3),
+        },
+      };
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // STATE
+      // ══════════════════════════════════════════════════════════════════════════
+      const params = new URLSearchParams(window.location.search);
+      let currentTitle = params.get("title") || "chigaya-v1";
+      let currentCh = params.get("ch") || "ch1";
+      let titleData, chIndex;
+      let currentZoom = 1.0;
+      let pdfDoc = null;
+      let renderTask = null;
+      let viewMode = "single-vert";
+
+      // Horizontal-specific state
+      let horizSlideIndex = 0;
+      let horizSlideCount = 0;
+      let horizNavLocked = false;
+
+      // Reading direction + spreads
+      let readDir = "ltr"; // "rtl" = manga (pages flip right-to-left)
+      let coverAlone = true; // first page shown alone in double-page views
+      const isRTL = () => readDir === "rtl";
+      const WIDE_PAGE_AR = 1.1; // page wider than this = already a 2-page spread
+
+      // Manga defaults to right-to-left, everything else left-to-right.
+      // A reader's own choice is remembered per title.
+      function defaultReadDir() {
+        try {
+          const saved = localStorage.getItem("ch_dir_" + currentTitle);
+          if (saved === "rtl" || saved === "ltr") return saved;
+        } catch (e) {}
+        if (titleData && (titleData.dir === "rtl" || titleData.dir === "ltr"))
+          return titleData.dir;
+        const name = ((titleData && titleData.title) || "").toLowerCase();
+        const hit = (window.CH_CATALOG || []).find(
+          (c) => (c.title || "").toLowerCase() === name,
+        );
+        const tags = hit
+          ? ((hit.keywords || "") + " " + (hit.genre || "")).toLowerCase()
+          : "";
+        return /\bmanga\b/.test(tags) && !/manhwa|webtoon|novel/.test(tags)
+          ? "rtl"
+          : "ltr";
+      }
+      function updateDirUI() {
+        const l = document.getElementById("dirLabel");
+        if (l)
+          l.textContent = isRTL() ? "Right → Left (manga)" : "Left → Right";
+        const b = document.getElementById("dirBtn");
+        if (b) b.classList.toggle("active", isRTL());
+      }
+      function rebuildCurrent() {
+        if (!pdfDoc) return;
+        const ch = titleData.chapters[chIndex];
+        if (isHorizMode())
+          buildHorizSlides(ch.pageStart || 1, ch.pageEnd || pdfDoc.numPages);
+        else loadPDF(ch);
+      }
+      function toggleReadDir() {
+        readDir = isRTL() ? "ltr" : "rtl";
+        try {
+          localStorage.setItem("ch_dir_" + currentTitle, readDir);
+        } catch (e) {}
+        updateDirUI();
+        rebuildCurrent();
+      }
+      function toggleCoverAlone() {
+        coverAlone = !coverAlone;
+        document
+          .getElementById("coverBtn")
+          .classList.toggle("active", coverAlone);
+        if (isDoubleMode()) rebuildCurrent();
+      }
+
+      // Look at every page's shape once, then group pages into screens.
+      // The cover and wide pages (already a spread) stay alone.
+      async function planSpreads(startPage, endPage, double) {
+        const ar = {};
+        for (let p = startPage; p <= endPage; p++) {
+          const pg = await pdfDoc.getPage(p);
+          const v = pg.getViewport({ scale: 1 });
+          ar[p] = v.width / v.height;
+        }
+        const wide = (p) => ar[p] > WIDE_PAGE_AR;
+        const slides = [];
+        let p = startPage;
+        if (!double) {
+          for (; p <= endPage; p++) slides.push([p]);
+        } else {
+          if (coverAlone && p <= endPage) slides.push([p++]);
+          while (p <= endPage) {
+            if (p === endPage || wide(p) || wide(p + 1)) slides.push([p++]);
+            else {
+              slides.push([p, p + 1]);
+              p += 2;
+            }
+          }
+        }
+        return { slides, ar, wide };
+      }
+
+      // ── Reading progress + chapter drawer ────────────────────────────────
+      let chProg = {}; // { chapterId: highest % reached }
+      let chLivePct = 0;
+      let progSaveT = null;
+      const progKey = () => "ch_prog_" + currentTitle;
+      function loadProg() {
+        try {
+          chProg = JSON.parse(localStorage.getItem(progKey()) || "{}") || {};
+        } catch (e) {
+          chProg = {};
+        }
+      }
+      function reportProgress(pct) {
+        pct = Math.max(0, Math.min(100, Math.round(pct)));
+        chLivePct = pct;
+        const fill = document.getElementById("progressFill");
+        if (fill) fill.style.width = pct + "%";
+        const lab = document.getElementById("progressPct");
+        if (lab) lab.textContent = pct + "%";
+        const ch = titleData && titleData.chapters[chIndex];
+        if (!ch) return;
+        if (pct > (chProg[ch.id] || 0)) chProg[ch.id] = pct;
+        const item = document.querySelector(
+          '.cs-item[data-id="' + ch.id + '"]',
+        );
+        if (item) {
+          item.querySelector(".cs-bar u").style.width =
+            (chProg[ch.id] || 0) + "%";
+          item.classList.toggle("done", (chProg[ch.id] || 0) >= 97);
+          item.querySelector(".cs-st").innerHTML =
+            (chProg[ch.id] || 0) >= 97 ? "&#10003;" : pct + "%";
+        }
+        clearTimeout(progSaveT);
+        progSaveT = setTimeout(() => {
+          try {
+            localStorage.setItem(progKey(), JSON.stringify(chProg));
+          } catch (e) {}
+          updateSideTotal();
+        }, 400);
+      }
+      function updateSideTotal() {
+        if (!titleData) return;
+        const n = titleData.chapters.length;
+        const done = titleData.chapters.filter(
+          (c) => (chProg[c.id] || 0) >= 97,
+        ).length;
+        const t = document.getElementById("csTotal");
+        const s = document.getElementById("csSub");
+        if (t) t.style.width = (done / n) * 100 + "%";
+        if (s) s.textContent = done + " of " + n + " chapters read";
+      }
+      function chapterTag(ch) {
+        if (ch.free) return "Free";
+        if (isOwned(currentTitle, ch.id) || isOwned(currentTitle, "bundle"))
+          return "Unlocked";
+        return "$" + (ch.price || 0.99).toFixed(2);
+      }
+      function buildChapterList() {
+        if (!titleData) return;
+        loadProg();
+        document.getElementById("csTitle").textContent = titleData.title;
+        document.getElementById("csList").innerHTML = titleData.chapters
+          .map((c, i) => {
+            const p = chProg[c.id] || 0;
+            const locked = !(
+              c.free ||
+              isOwned(currentTitle, c.id) ||
+              isOwned(currentTitle, "bundle")
+            );
+            const st =
+              p >= 97 ? "&#10003;" : locked ? "&#128274;" : p ? p + "%" : "";
+            return (
+              '<button type="button" class="cs-item' +
+              (i === chIndex ? " on" : "") +
+              (p >= 97 ? " done" : "") +
+              '" data-id="' +
+              c.id +
+              '">' +
+              '<span class="cs-n">' +
+              (i + 1) +
+              "</span>" +
+              '<span class="cs-t"><b>' +
+              c.label +
+              "</b><small>" +
+              chapterTag(c) +
+              "</small></span>" +
+              '<span class="cs-st">' +
+              st +
+              "</span>" +
+              '<i class="cs-bar"><u style="width:' +
+              p +
+              '%"></u></i></button>'
+            );
+          })
+          .join("");
+        updateSideTotal();
+        const on = document.querySelector(".cs-item.on");
+        if (on) on.scrollIntoView({ block: "center" });
+      }
+      document.addEventListener("click", (e) => {
+        const it = e.target.closest(".cs-item");
+        if (!it) return;
+        if (it.dataset.id !== titleData.chapters[chIndex].id)
+          loadChapter(it.dataset.id);
+        if (window.innerWidth < 1100 || isHorizMode()) toggleSide(false);
+      });
+      function placeSide() {
+        const tb = document.getElementById("readerTopbar");
+        const b = tb ? tb.getBoundingClientRect().bottom : 120;
+        document.documentElement.style.setProperty("--side-top", b + "px");
+      }
+      function toggleSide(force) {
+        placeSide();
+        const open =
+          typeof force === "boolean"
+            ? force
+            : !document.body.classList.contains("side-open");
+        document.body.classList.toggle("side-open", open);
+        // on narrow screens only one drawer at a time
+        if (open && (window.innerWidth < 1100 || isHorizMode()))
+          toggleSettings(false);
+        if (isHorizMode() === false)
+          setTimeout(() => {
+            if (pdfDoc && !isHorizMode()) updateProgress();
+          }, 420);
+      }
+      function toggleSettings(force) {
+        placeSide();
+        const open =
+          typeof force === "boolean"
+            ? force
+            : !document.body.classList.contains("set-open");
+        document.body.classList.toggle("set-open", open);
+        const btn = document.getElementById("settingsBtn");
+        if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open && (window.innerWidth < 1100 || isHorizMode()))
+          document.body.classList.remove("side-open");
+      }
+      function syncSideLayout(modeChanged) {
+        document.body.classList.toggle("horiz-on", isHorizMode());
+        if (modeChanged && isHorizMode())
+          document.body.classList.remove("side-open");
+        placeSide();
+      }
+      window.addEventListener("resize", placeSide);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          toggleSettings(false);
+          if (window.innerWidth < 1100 || isHorizMode()) toggleSide(false);
+        }
+      });
+
+      // ── Helpers ────────────────────────────────────────────────────────────────
+      function isHorizMode() {
+        return viewMode === "single-horiz" || viewMode === "double-horiz";
+      }
+      function isDoubleMode() {
+        return viewMode === "double-vert" || viewMode === "double-horiz";
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // INIT
+      // ══════════════════════════════════════════════════════════════════════════
+      async function init() {
+        titleData = READER_DATA[currentTitle];
+        if (!titleData) {
+          showError("Title not found.", "Please go back and try again.");
+          return;
+        }
+
+        chIndex = titleData.chapters.findIndex((c) => c.id === currentCh);
+        if (chIndex < 0) chIndex = 0;
+        readDir = defaultReadDir();
+        updateDirUI();
+        syncSideLayout(false);
+        if (window.innerWidth >= 1100) document.body.classList.add("side-open");
+
+        const ch = titleData.chapters[chIndex];
+        if (typeof chHydrateUserFromLocalCache === "function")
+          chHydrateUserFromLocalCache();
+        await chRestoreSessionFromToken();
+
+        if (ch.free) {
+          recordFreeRead(currentTitle, ch.id);
+          loadPDF(ch);
+          return;
+        }
+
+        if (!CH_USER) {
+          sessionStorage.setItem(
+            "ch_after_read",
+            JSON.stringify({ title: currentTitle, ch: currentCh }),
+          );
+          openAuth();
+          return;
+        }
+
+        if (CH_USER) await chSyncLibraryFromBackend({ force: true });
+        const hasAccess =
+          ch.free ||
+          isOwned(currentTitle, ch.id) ||
+          isOwned(currentTitle, "bundle");
+        if (!hasAccess) {
+          initPurchase(currentTitle, ch.id, ch.label, ch.price || 0.99);
+          return;
+        }
+
+        loadPDF(ch);
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // LOAD PDF — routes to vert or horiz
+      // ══════════════════════════════════════════════════════════════════════════
+      async function loadPDF(ch) {
+        document.getElementById("readerTitle").textContent = titleData.title;
+        document.getElementById("readerCh").textContent = ch.label;
+        syncSideLayout(false);
+        buildChapterList();
+        reportProgress(0);
+        document.getElementById("prevBtn").disabled = chIndex === 0;
+        document.getElementById("nextBtn").disabled =
+          chIndex >= titleData.chapters.length - 1;
+
+        if (isHorizMode()) {
+          document.getElementById("horizViewer").classList.add("active");
+          document.getElementById("readerPages").style.display = "none";
+          document.getElementById("pageIndicator").classList.add("hidden");
+          document.getElementById("vertPrevBtn").classList.add("hidden");
+          document.getElementById("vertNextBtn").classList.add("hidden");
+          positionHorizViewer();
+
+          document.getElementById("horizStrip").innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:center;width:100vw;height:100%;">
+              <div class="pdf-loading" style="padding:40px 24px">
+                <div class="pdf-loading-ring"></div>
+                <span>Loading ${ch.label}…</span>
+              </div>
+            </div>`;
+          document.getElementById("horizDots").innerHTML = "";
+          document.getElementById("horizCounter").textContent = "";
+          horizSlideIndex = 0;
+        } else {
+          document.getElementById("horizViewer").classList.remove("active");
+          document.getElementById("readerPages").style.display = "";
+          document.getElementById("pageIndicator").classList.remove("hidden");
+          document.getElementById("readerPages").innerHTML = `
+            <div class="pdf-loading">
+              <div class="pdf-loading-ring"></div>
+              <span>Loading ${ch.label}…</span>
+            </div>`;
+          document.getElementById("pageIndicator").textContent = "Loading…";
+        }
+
+        if (renderTask) {
+          try {
+            renderTask.cancel();
+          } catch (e) {}
+          renderTask = null;
+        }
+        pdfDoc = null;
+
+        try {
+          if (ch.bookId) {
+            if (typeof chHydrateUserFromLocalCache === "function")
+              chHydrateUserFromLocalCache();
+            await chRestoreSessionFromToken();
+            const token = sessionStorage.getItem("ch_token");
+            if (!ch.free && (!CH_USER || !token)) {
+              sessionStorage.setItem(
+                "ch_after_read",
+                JSON.stringify({ title: currentTitle, ch: currentCh }),
+              );
+              openAuth();
+              return;
+            }
+            const readerEndpoint = ch.free ? "preview" : "read";
+            let readToken = "";
+            if (!ch.free && token) {
+              const apiBase = (
+                window.CH_API_URL ||
+                (["localhost", "127.0.0.1", ""].includes(location.hostname) ||
+                location.protocol === "file:"
+                  ? localStorage.getItem("ch_api_url")
+                  : "") ||
+                (["thecrossedhearts.com", "www.thecrossedhearts.com"].includes(
+                  location.hostname,
+                )
+                  ? "https://crossed-hearts-final.onrender.com/api"
+                  : location.hostname === "crossed-hearts.onrender.com"
+                    ? "https://crossed-hearts-final.onrender.com/api"
+                    : ["localhost", "127.0.0.1", ""].includes(
+                          location.hostname,
+                        ) || location.protocol === "file:"
+                      ? "http://localhost:5000/api"
+                      : "https://crossed-hearts-final.onrender.com/api")
+              ).replace(/\/$/, "");
+              const tokenResponse = await fetch(
+                `${apiBase}/library/${ch.bookId}/read-token/${ch.id || currentCh}`,
+                {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${token}` },
+                },
+              );
+              if (tokenResponse.ok) {
+                const tokenData = await tokenResponse.json();
+                readToken = tokenData.data?.readToken || "";
+              }
+            }
+            const apiBase = (
+              window.CH_API_URL ||
+              (["localhost", "127.0.0.1", ""].includes(location.hostname) ||
+              location.protocol === "file:"
+                ? localStorage.getItem("ch_api_url")
+                : "") ||
+              (["thecrossedhearts.com", "www.thecrossedhearts.com"].includes(
+                location.hostname,
+              )
+                ? "https://crossed-hearts-final.onrender.com/api"
+                : location.hostname === "crossed-hearts.onrender.com"
+                  ? "https://crossed-hearts-final.onrender.com/api"
+                  : ["localhost", "127.0.0.1", ""].includes(
+                        location.hostname,
+                      ) || location.protocol === "file:"
+                    ? "http://localhost:5000/api"
+                    : "https://crossed-hearts-final.onrender.com/api")
+            ).replace(/\/$/, "");
+            const readUrl = new URL(
+              `${apiBase}/library/${ch.bookId}/${readerEndpoint}/${ch.id || currentCh}`,
+            );
+            if (readToken) readUrl.searchParams.set("readToken", readToken);
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const response = await fetch(readUrl.toString(), { headers });
+            if (!response.ok) {
+              const errorText = await response
+                .clone()
+                .text()
+                .catch(() => "");
+              let errorMessage = "";
+              try {
+                errorMessage = JSON.parse(errorText).message || "";
+              } catch (_) {
+                errorMessage = errorText.slice(0, 180);
+              }
+              console.warn("Reader PDF request failed:", {
+                url: readUrl.toString(),
+                status: response.status,
+                chapter: ch.id || currentCh,
+                free: Boolean(ch.free),
+                message: errorMessage,
+              });
+              if (
+                !ch.free &&
+                (response.status === 401 || response.status === 403)
+              ) {
+                sessionStorage.removeItem("ch_token");
+                localStorage.removeItem("ch_user_persist");
+                sessionStorage.removeItem("ch_user");
+                CH_USER = null;
+                openAuth();
+                return;
+              }
+              showError(
+                ch.free ? "Could Not Load Free Chapter" : "Access Denied",
+                errorMessage ||
+                  (ch.free
+                    ? "The free chapter could not be loaded from the server yet."
+                    : "This chapter is not available for your account yet."),
+              );
+              return;
+            }
+            const pdfBlob = await response.blob();
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            pdfDoc = await pdfjsLib.getDocument({ url: pdfUrl }).promise;
+          } else {
+            pdfDoc = await pdfjsLib.getDocument({ url: ch.pdfSrc }).promise;
+          }
+          const startPage = ch.pageStart || 1;
+          const endPage = ch.pageEnd || pdfDoc.numPages;
+          if (isHorizMode()) {
+            await buildHorizSlides(startPage, endPage);
+          } else {
+            await renderVerticalPages(ch, startPage, endPage);
+          }
+        } catch (err) {
+          if (err && err.name === "RenderingCancelledException") return;
+          console.error("PDF load error:", err);
+          showError(
+            "Could not load this chapter.",
+            `Check your connection and try again. (${err.message || err})`,
+          );
+        }
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // VERTICAL MODES
+      // ══════════════════════════════════════════════════════════════════════════
+
+      async function renderVerticalPages(ch, startPage, endPage) {
+        const container = document.getElementById("readerPages");
+        container.innerHTML = "";
+        container.classList.remove("narrow", "wide");
+        if (viewMode === "double-vert") container.classList.add("wide");
+
+        if (isDoubleMode()) {
+          const plan = await planSpreads(startPage, endPage, true);
+          plan.slides.forEach((group) => {
+            const pair = document.createElement("div");
+            pair.className = "double-pair" + (isRTL() ? " rtl" : "");
+            if (group.length === 1) {
+              pair.classList.add("solo");
+              if (plan.wide(group[0])) pair.classList.add("spread");
+            }
+            group.forEach((pn) => pair.appendChild(makeVertWrap(pn)));
+            container.appendChild(pair);
+          });
+        } else {
+          for (let i = startPage; i <= endPage; i++)
+            container.appendChild(makeVertWrap(i));
+        }
+
+        updatePageIndicator(1, endPage - startPage + 1);
+
+        for (let p = startPage; p <= endPage; p++) {
+          try {
+            await renderPageVertical(p);
+          } catch (e) {
+            if (e && e.name === "RenderingCancelledException") return;
+          }
+        }
+
+        const nextCh = titleData.chapters[chIndex + 1];
+        if (nextCh) {
+          const nextOwned =
+            nextCh.free ||
+            isOwned(currentTitle, nextCh.id) ||
+            isOwned(currentTitle, "bundle");
+          container.insertAdjacentHTML(
+            "beforeend",
+            `
+            <div class="reader-end">
+              <h3>End of ${ch.label.split("—")[0].trim()}</h3>
+              <p>Continue to <strong>${nextCh.label}</strong></p>
+              <button class="btn-gold" onclick="${
+                nextOwned
+                  ? `loadChapter('${nextCh.id}')`
+                  : CH_USER
+                    ? `initPurchase('${currentTitle}','${nextCh.id}','${nextCh.label.replace(/'/g, "\\'")}',${nextCh.price || 0.99})`
+                    : `openAuth()`
+              }">
+                ${nextOwned ? "▶ Read Next Chapter" : `Unlock for $${(nextCh.price || 0.99).toFixed(2)}`}
+              </button>
+            </div>`,
+          );
+        }
+        updateProgress();
+      }
+
+      function makeVertWrap(pageNum) {
+        const wrap = document.createElement("div");
+        wrap.className = "pdf-page-wrap";
+        wrap.id = "vert-wrap-" + pageNum;
+        wrap.innerHTML = '<div class="pdf-page-skeleton"></div>';
+        return wrap;
+      }
+
+      async function renderPageVertical(pageNum) {
+        const page = await pdfDoc.getPage(pageNum);
+        const wrap = document.getElementById("vert-wrap-" + pageNum);
+        if (!wrap) return;
+        const containerW =
+          document.getElementById("readerPages").clientWidth || 760;
+        const vp0 = page.getViewport({ scale: 1 });
+        const scale = (containerW / vp0.width) * currentZoom;
+        const vp = page.getViewport({ scale });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = vp.width;
+        canvas.height = vp.height;
+
+        wrap.innerHTML = "";
+        wrap.appendChild(canvas);
+        canvas.setAttribute("draggable", "false");
+        canvas.addEventListener("contextmenu", (event) =>
+          event.preventDefault(),
+        );
+        const shield = document.createElement("div");
+        shield.className = "page-shield";
+        wrap.appendChild(shield);
+
+        renderTask = page.render({
+          canvasContext: canvas.getContext("2d"),
+          viewport: vp,
+        });
+        await renderTask.promise;
+        renderTask = null;
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // HORIZONTAL MODES
+      // ══════════════════════════════════════════════════════════════════════════
+
+      function positionHorizViewer() {
+        const topbar = document.getElementById("readerTopbar");
+        const rect = topbar ? topbar.getBoundingClientRect() : { bottom: 80 };
+        document.getElementById("horizViewer").style.top = rect.bottom + "px";
+      }
+
+      async function buildHorizSlides(startPage, endPage) {
+        const strip = document.getElementById("horizStrip");
+        const isDouble = viewMode === "double-horiz";
+        strip.innerHTML = "";
+        horizSlideIndex = 0;
+
+        // Group pages into screens (cover alone, wide spreads alone)
+        const plan = await planSpreads(startPage, endPage, isDouble);
+        const slides = plan.slides;
+        horizSlideCount = slides.length;
+
+        const vwPx = window.innerWidth - (window.innerWidth < 760 ? 88 : 144); // slide padding x 2
+        const viewer = document.getElementById("horizViewer");
+        const indicH =
+          document.getElementById("horizIndicator").offsetHeight || 40;
+        const maxH = viewer.clientHeight - indicH - 24;
+
+        // Pages on one screen share a height; widths follow each page's own shape.
+        const sizes = slides.map((group) => {
+          const sumAR = group.reduce((t, p) => t + plan.ar[p], 0);
+          let h = Math.round((vwPx / sumAR) * currentZoom);
+          if (h > maxH) h = maxH;
+          return group.map((p) => ({ p, w: Math.round(h * plan.ar[p]), h }));
+        });
+
+        // Manga: first screen sits at the far RIGHT, so build the strip backwards.
+        // Inside a spread, the lower page number goes on the right.
+        const order = slides.map((g, i) => i);
+        if (isRTL()) order.reverse();
+        order.forEach((i) => {
+          const slide = document.createElement("div");
+          slide.className = "horiz-slide";
+          slide.dataset.slide = i;
+          if (slides[i].length === 2) slide.classList.add("is-spread");
+          if (isRTL()) {
+            slide.style.flexDirection = "row-reverse";
+            slide.classList.add("rtl-slide");
+          }
+          sizes[i].forEach(({ p, w, h }) => {
+            const wrap = document.createElement("div");
+            wrap.className = "horiz-page-wrap";
+            wrap.id = "horiz-wrap-" + p;
+            wrap.style.width = w + "px";
+            wrap.style.height = h + "px";
+            const skel = document.createElement("div");
+            skel.className = "pdf-page-skeleton";
+            skel.style.width = w + "px";
+            skel.style.height = h + "px";
+            wrap.appendChild(skel);
+            slide.appendChild(wrap);
+          });
+          strip.appendChild(slide);
+        });
+
+        horizApplyTransform(true);
+        buildHorizIndicator(horizSlideCount);
+        updateHorizNav();
+        updateHorizIndicator(0);
+        reportProgress(horizSlideCount > 1 ? 0 : 100);
+
+        // Render in reading order
+        for (const group of sizes) {
+          for (const { p, w, h } of group) {
+            try {
+              await renderPageHoriz(p, w, h);
+            } catch (e) {
+              if (e && e.name === "RenderingCancelledException") return;
+            }
+          }
+        }
+      }
+
+      // Move the strip to the current screen (handles right-to-left)
+      function horizApplyTransform(instant) {
+        const strip = document.getElementById("horizStrip");
+        const pos = isRTL()
+          ? horizSlideCount - 1 - horizSlideIndex
+          : horizSlideIndex;
+        if (instant) strip.classList.add("no-transition");
+        else strip.classList.remove("no-transition");
+        strip.style.transform = `translateX(${-pos * 100}vw)`;
+        if (instant)
+          requestAnimationFrame(() => strip.classList.remove("no-transition"));
+      }
+
+      async function renderPageHoriz(pageNum, targetW, targetH) {
+        const page = await pdfDoc.getPage(pageNum);
+        const wrap = document.getElementById("horiz-wrap-" + pageNum);
+        if (!wrap) return;
+
+        const vp0 = page.getViewport({ scale: 1 });
+
+        // Scale to targetW exactly — same logic as vertical, no DPR multiplication
+        const scale = (targetW / vp0.width) * currentZoom;
+        const vp = page.getViewport({ scale });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(vp.width);
+        canvas.height = Math.round(vp.height);
+
+        canvas.style.width = "100%";
+        canvas.style.height = "auto";
+        canvas.style.display = "block";
+
+        wrap.innerHTML = "";
+        wrap.appendChild(canvas);
+        canvas.setAttribute("draggable", "false");
+        canvas.addEventListener("contextmenu", (event) =>
+          event.preventDefault(),
+        );
+        const shield = document.createElement("div");
+        shield.className = "page-shield";
+        wrap.appendChild(shield);
+
+        renderTask = page.render({
+          canvasContext: canvas.getContext("2d"),
+          viewport: vp,
+        });
+        await renderTask.promise;
+        renderTask = null;
+      }
+
+      // ── Navigate one slide ─────────────────────────────────────────────────────
+      function horizNav(dir) {
+        if (horizNavLocked) return;
+        const next = horizSlideIndex + dir;
+        if (next < 0 || next >= horizSlideCount) return;
+        horizNavLocked = true;
+        horizSlideIndex = next;
+
+        horizApplyTransform(false);
+
+        updateHorizNav();
+        updateHorizIndicator(horizSlideIndex);
+
+        reportProgress(
+          horizSlideCount > 1
+            ? (horizSlideIndex / (horizSlideCount - 1)) * 100
+            : 100,
+        );
+
+        setTimeout(() => {
+          horizNavLocked = false;
+        }, 240);
+      }
+
+      function updateHorizNav() {
+        document
+          .getElementById("horizPrevBc")
+          .classList.toggle("hidden", horizSlideIndex === 0);
+        document
+          .getElementById("horizNextBc")
+          .classList.toggle("hidden", horizSlideIndex >= horizSlideCount - 1);
+        // arrows sit and point the way pages actually travel
+        document
+          .getElementById("horizViewer")
+          .classList.toggle("rtl-dir", isRTL());
+        document.getElementById("horizPrevBc").innerHTML = isRTL()
+          ? "&#8594;"
+          : "&#8592;";
+        document.getElementById("horizNextBc").innerHTML = isRTL()
+          ? "&#8592;"
+          : "&#8594;";
+      }
+
+      function buildHorizIndicator(total) {
+        const dots = document.getElementById("horizDots");
+        const counter = document.getElementById("horizCounter");
+        dots.innerHTML = "";
+        dots.style.direction = isRTL() ? "rtl" : "ltr";
+        if (total <= 20) {
+          for (let i = 0; i < total; i++) {
+            const d = document.createElement("div");
+            d.className = "hdot";
+            d.dataset.i = i;
+            dots.appendChild(d);
+          }
+          dots.style.display = "flex";
+          counter.style.display = "none";
+        } else {
+          dots.style.display = "none";
+          counter.style.display = "block";
+        }
+      }
+
+      function updateHorizIndicator(idx) {
+        if (horizSlideCount <= 20) {
+          document
+            .querySelectorAll(".hdot")
+            .forEach((d, i) => d.classList.toggle("active", i === idx));
+        } else {
+          document.getElementById("horizCounter").textContent =
+            `${idx + 1} / ${horizSlideCount}`;
+        }
+      }
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // INPUT HANDLERS — Horizontal modes
+      // ══════════════════════════════════════════════════════════════════════════
+
+      let wheelCooldown = false;
+      document.addEventListener(
+        "wheel",
+        (e) => {
+          if (!isHorizMode()) return;
+          // let the open drawers scroll normally
+          if (e.target.closest(".rd-drawer")) return;
+          e.preventDefault();
+          if (wheelCooldown) return;
+          const dir =
+            (Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY) > 0
+              ? 1
+              : -1;
+          horizNav(dir);
+          wheelCooldown = true;
+          setTimeout(() => {
+            wheelCooldown = false;
+          }, 320);
+        },
+        { passive: false },
+      );
+
+      document.addEventListener("keydown", (e) => {
+        const key = String(e.key || "").toLowerCase();
+        const blockedShortcut =
+          (e.ctrlKey || e.metaKey) && ["s", "p", "u", "o"].includes(key);
+        if (blockedShortcut || key === "printscreen") {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof showToast === "function") {
+            showToast(
+              "Protected reader: saving, printing, and copying are disabled.",
+              "info",
+            );
+          }
+          return;
+        }
+
+        if (!isHorizMode()) return;
+        const fwdKey = isRTL() ? "ArrowLeft" : "ArrowRight";
+        const backKey = isRTL() ? "ArrowRight" : "ArrowLeft";
+        if (e.key === fwdKey || e.key === "ArrowDown") {
+          e.preventDefault();
+          horizNav(1);
+        }
+        if (e.key === backKey || e.key === "ArrowUp") {
+          e.preventDefault();
+          horizNav(-1);
+        }
+      });
+
+      document.addEventListener("contextmenu", (e) => {
+        if (e.target.closest("#readerPages, #horizViewer")) {
+          e.preventDefault();
+          if (typeof showToast === "function") {
+            showToast("Protected reader: right click is disabled.", "info");
+          }
+        }
+      });
+
+      window.addEventListener("beforeprint", () => {
+        document.body.classList.add("reader-print-blocked");
+        if (typeof showToast === "function") {
+          showToast("Protected reader: printing is disabled.", "info");
+        }
+      });
+
+      window.addEventListener("afterprint", () => {
+        document.body.classList.remove("reader-print-blocked");
+      });
+
+      (function () {
+        const track = document.getElementById("horizTrack");
+        let dragStartX = 0,
+          dragging = false,
+          moved = false;
+        const THRESHOLD = 60;
+        track.addEventListener("mousedown", (e) => {
+          if (!isHorizMode() || e.target.closest(".horiz-bc-btn")) return;
+          dragging = true;
+          moved = false;
+          dragStartX = e.clientX;
+          track.classList.add("dragging");
+        });
+        window.addEventListener("mousemove", (e) => {
+          if (!dragging) return;
+          if (Math.abs(e.clientX - dragStartX) > 10) moved = true;
+        });
+        window.addEventListener("mouseup", (e) => {
+          if (!dragging) return;
+          dragging = false;
+          track.classList.remove("dragging");
+          if (!moved) return;
+          const dx = e.clientX - dragStartX;
+          if (Math.abs(dx) >= THRESHOLD)
+            horizNav((isRTL() ? dx > 0 : dx < 0) ? 1 : -1);
+        });
+      })();
+
+      (function () {
+        let tx = 0,
+          ty = 0;
+        const THRESHOLD = 50;
+        document.addEventListener(
+          "touchstart",
+          (e) => {
+            tx = e.touches[0].clientX;
+            ty = e.touches[0].clientY;
+          },
+          { passive: true },
+        );
+        document.addEventListener(
+          "touchend",
+          (e) => {
+            if (!isHorizMode()) return;
+            if (e.target.closest && e.target.closest(".rd-drawer, .rd-dock"))
+              return;
+            const dx = tx - e.changedTouches[0].clientX;
+            const dy = ty - e.changedTouches[0].clientY;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) >= THRESHOLD)
+              horizNav((isRTL() ? dx < 0 : dx > 0) ? 1 : -1);
+          },
+          { passive: true },
+        );
+      })();
+
+      // ══════════════════════════════════════════════════════════════════════════
+      // SHARED UTILITIES
+      // ══════════════════════════════════════════════════════════════════════════
+
+      function changeChapter(dir) {
+        const newIdx = chIndex + dir;
+        if (newIdx < 0 || newIdx >= titleData.chapters.length) return;
+        loadChapter(titleData.chapters[newIdx].id);
+      }
+
+      async function loadChapter(chId) {
+        const ch = titleData.chapters.find((c) => c.id === chId);
+        if (!ch) return;
+        if (typeof chHydrateUserFromLocalCache === "function")
+          chHydrateUserFromLocalCache();
+        await chRestoreSessionFromToken();
+
+        if (!CH_USER) {
+          sessionStorage.setItem(
+            "ch_after_read",
+            JSON.stringify({ title: currentTitle, ch: chId }),
+          );
+          openAuth();
+          return;
+        }
+
+        if (CH_USER) await chSyncLibraryFromBackend({ force: true });
+        const hasAccess =
+          ch.free ||
+          isOwned(currentTitle, ch.id) ||
+          isOwned(currentTitle, "bundle");
+        if (!hasAccess) {
+          initPurchase(currentTitle, ch.id, ch.label, ch.price || 0.99);
+          return;
+        }
+
+        if (ch.free) recordFreeRead(currentTitle, ch.id);
+
+        const url = new URL(window.location.href);
+        url.searchParams.set("title", currentTitle);
+        url.searchParams.set("ch", chId);
+        window.history.pushState({}, "", url);
+        currentCh = chId;
+        chIndex = titleData.chapters.findIndex((c) => c.id === chId);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        loadPDF(ch);
+      }
+
+      function changeZoom(delta) {
+        currentZoom = Math.max(0.5, Math.min(2.0, currentZoom + delta));
+        document.getElementById("zoomLabel").textContent =
+          Math.round(currentZoom * 100) + "%";
+        if (!pdfDoc) return;
+        if (isHorizMode()) {
+          const ch = titleData.chapters[chIndex];
+          buildHorizSlides(ch.pageStart || 1, ch.pageEnd || pdfDoc.numPages);
+        } else {
+          loadPDF(titleData.chapters[chIndex]);
+        }
+      }
+
+      function setViewMode(mode, btn) {
+        viewMode = mode;
+        syncSideLayout(true);
+        document
+          .querySelectorAll("#viewModeGroup .view-mode-btn")
+          .forEach((b) => b.classList.remove("active"));
+        if (btn) btn.classList.add("active");
+        if (pdfDoc) loadPDF(titleData.chapters[chIndex]);
+      }
+
+      function updateProgress() {
+        if (isHorizMode()) return;
+        const pages = document.getElementById("readerPages");
+        if (!pages) return;
+        const pct =
+          pages.scrollHeight > window.innerHeight
+            ? Math.min(
+                100,
+                (window.scrollY / (pages.scrollHeight - window.innerHeight)) *
+                  100,
+              )
+            : 100;
+        reportProgress(pct);
+        const wraps = pages.querySelectorAll(".pdf-page-wrap");
+        let current = 1;
+        wraps.forEach((el, idx) => {
+          if (el.getBoundingClientRect().top < window.innerHeight * 0.5)
+            current = idx + 1;
+        });
+        updatePageIndicator(current, wraps.length);
+        updateVertArrows(current, wraps.length);
+      }
+
+      function updateVertArrows(current, total) {
+        const prevBtn = document.getElementById("vertPrevBtn");
+        const nextBtn = document.getElementById("vertNextBtn");
+        if (!prevBtn || !nextBtn) return;
+        prevBtn.classList.toggle("hidden", current <= 1);
+        nextBtn.classList.toggle("hidden", current >= total);
+      }
+
+      function vertNav(dir) {
+        const pages = document.getElementById("readerPages");
+        if (!pages) return;
+        const wraps = Array.from(pages.querySelectorAll(".pdf-page-wrap"));
+        if (!wraps.length) return;
+        let current = 0;
+        wraps.forEach((el, idx) => {
+          if (el.getBoundingClientRect().top < window.innerHeight * 0.5)
+            current = idx;
+        });
+        const target = wraps[current + dir];
+        if (target)
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function updatePageIndicator(current, total) {
+        const ind = document.getElementById("pageIndicator");
+        if (ind) ind.textContent = `Page ${current} of ${total}`;
+      }
+
+      window.addEventListener("scroll", updateProgress, { passive: true });
+      window.addEventListener("resize", () => {
+        positionHorizViewer();
+        if (isHorizMode()) positionHorizViewer();
+      });
+
+      function goBack() {
+        window.location.href = titleData ? titleData.backUrl : "my-library.html";
+      }
+
+      function showError(title, msg) {
+        const html = `<div class="pdf-error"><h3>${title}</h3><p>${msg}</p>
+          <button class="btn-ghost" onclick="goBack()">← Go Back</button></div>`;
+        if (isHorizMode()) {
+          document.getElementById("horizStrip").innerHTML =
+            `<div style="display:flex;align-items:center;justify-content:center;width:100vw;height:100%">${html}</div>`;
+        } else {
+          document.getElementById("readerPages").innerHTML = html;
+        }
+      }
+
+      function recordFreeRead(titleId, chId) {
+        if (!CH_USER) return;
+        if (!CH_LIB[titleId]) CH_LIB[titleId] = [];
+        if (
+          !CH_LIB[titleId].includes(chId) &&
+          !CH_LIB[titleId].includes("bundle")
+        ) {
+          CH_LIB[titleId].push(chId);
+          const libJson = JSON.stringify(CH_LIB);
+          sessionStorage.setItem("ch_lib", libJson);
+        }
+      }
+
+      function onAuthChange() {
+        const pending = sessionStorage.getItem("ch_after_read");
+        if (pending && CH_USER) {
+          try {
+            const p = JSON.parse(pending);
+            sessionStorage.removeItem("ch_after_read");
+            if (p.title === currentTitle) {
+              loadChapter(p.ch);
+            } else {
+              window.location.href =
+                "reader.html?title=" + p.title + "&ch=" + p.ch;
+            }
+            return;
+          } catch (e) {}
+        }
+        init();
+      }
+
+      // Matchmaker's Fiancé Vol.1 — live chapters served from the backend
+      READER_DATA["matchmaker-v1"].volumePrice = 7.99;
+      READER_DATA["matchmaker-v1"].chapters = [
+        ...Array.from({ length: 7 }, (_, i) =>
+          chap("ch" + (i + 1), "Chapter " + (i + 1), i === 0, null, {
+            bookId: "matchmaker-v1",
+          }),
+        ),
+        chap("ch8", "Bonus - Afterword", false, null, {
+          bookId: "matchmaker-v1",
+        }),
+      ];
+
+      init();
+      renderAuthForm("in");
+    </script>
+  </body>
+</html>

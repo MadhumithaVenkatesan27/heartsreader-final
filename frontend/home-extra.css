@@ -1,0 +1,655 @@
+/* home-extra.css — new home sections + section pages (Comics / Manga / Novel) */
+
+/* series name always on ONE line */
+.tp-ct {
+  display: block !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset !important;
+}
+.tp-th b {
+  display: block !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: unset !important;
+}
+
+/* shared bits */
+.tp-sh h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tp-sh h2 i {
+  color: var(--tp-rose);
+}
+.tp-arrows {
+  display: flex;
+  gap: 6px;
+}
+.tp-note {
+  margin: -4px 0 14px;
+  font-size: 13px;
+  color: var(--tp-mute);
+}
+.tp-lbl {
+  font:
+    700 11px "DM Sans",
+    sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tp-mute);
+  margin: 10px 0 6px;
+}
+.tp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--tp-rose), var(--tp-rose2));
+  color: #fff;
+  font:
+    700 13px "DM Sans",
+    sans-serif;
+  white-space: nowrap;
+}
+.tp-btn:hover {
+  filter: brightness(1.1);
+}
+#tpTrendWrap,
+#tpWeekWrap,
+#tpGenreWrap,
+#tpHL {
+  scroll-margin-top: 90px;
+}
+#tpWeekWrap .tp-row,
+#tpTrendWrap .tp-row {
+  margin-bottom: 34px;
+}
+
+/* trending rank number */
+.tp-rank {
+  position: absolute;
+  left: 0;
+  top: 0;
+  min-width: 28px;
+  padding: 3px 8px 5px;
+  font:
+    800 18px "DM Sans",
+    sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, var(--tp-rose), var(--tp-rose2));
+  border-radius: 0 0 8px 0;
+  text-align: center;
+}
+
+/* highlights of the month */
+.tp-hl {
+  margin-bottom: 34px;
+}
+.tp-hl-box {
+  display: flex;
+  gap: 14px;
+  background: var(--tp-card);
+  border: 1px solid var(--tp-line);
+  border-radius: 14px;
+  padding: 16px;
+  align-items: stretch;
+}
+.tp-hl-main {
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  min-width: 0;
+  border-left: 4px solid var(--acc, #c9a84c);
+  padding-left: 16px;
+}
+.tp-hl-cover {
+  flex: 0 0 150px;
+  aspect-ratio: 3/4.2;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.tp-hl-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.tp-hl-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+.tp-hl-imp {
+  font:
+    700 10px "DM Sans",
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acc, #c9a84c);
+}
+.tp-hl-info h3 {
+  margin: 0;
+  font:
+    700 clamp(20px, 2.6vw, 30px) "Playfair Display",
+    serif;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tp-hl-g {
+  font-size: 12px;
+  color: var(--tp-mute);
+}
+.tp-hl-info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--tp-mute);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tp-hl-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tp-hl-thumbs button {
+  width: 54px;
+  aspect-ratio: 3/4.2;
+  border-radius: 6px;
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid transparent;
+  opacity: 0.55;
+  cursor: pointer;
+  background: none;
+  transition: 0.2s;
+}
+.tp-hl-thumbs button.on,
+.tp-hl-thumbs button:hover {
+  opacity: 1;
+  border-color: var(--tp-rose);
+}
+.tp-hl-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* weekly day tabs */
+.tp-days {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+}
+.tp-days::-webkit-scrollbar {
+  display: none;
+}
+.tp-day {
+  flex: 1 0 auto;
+  min-width: 64px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--tp-line);
+  background: transparent;
+  color: var(--tp-mute);
+  font:
+    700 13px "DM Sans",
+    sans-serif;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  transition: 0.2s;
+}
+.tp-day small {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--tp-rose);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tp-day:hover {
+  color: var(--tp-text);
+  border-color: var(--tp-rose);
+}
+.tp-day.on {
+  background: linear-gradient(135deg, var(--tp-rose), var(--tp-rose2));
+  border-color: transparent;
+  color: #fff;
+}
+.tp-day.on small {
+  color: #fff;
+}
+
+/* genre tiles */
+.tp-gtiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 34px;
+}
+.tp-gt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--tp-line);
+  background: var(--tp-card);
+  color: var(--tp-text);
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+  font-family: "DM Sans", sans-serif;
+}
+.tp-gt i {
+  font-size: 22px;
+  color: var(--tp-rose);
+  margin-bottom: 4px;
+}
+.tp-gt b {
+  font-size: 14px;
+}
+.tp-gt small {
+  font-size: 11px;
+  color: var(--tp-mute);
+}
+.tp-gt:hover {
+  transform: translateY(-3px);
+  border-color: var(--tp-rose);
+}
+
+/* print-only block */
+.tp-print {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--tp-line);
+}
+.tp-print .tp-allhead {
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tp-allhead {
+  flex-wrap: wrap;
+}
+.tp-filters .tp-chips {
+  margin-bottom: 4px;
+}
+
+/* section pages */
+.sec-head {
+  margin: 4px 0 6px;
+}
+.sec-head h1 {
+  margin: 0;
+  font:
+    700 clamp(26px, 4vw, 38px) "Playfair Display",
+    serif;
+}
+.sec-head p {
+  margin: 6px 0 14px;
+  color: var(--tp-mute);
+  font-size: 14px;
+}
+.sec-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.sec-tabs a {
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--tp-line);
+  color: var(--tp-mute);
+  text-decoration: none;
+  font:
+    600 13px "DM Sans",
+    sans-serif;
+}
+.sec-tabs a.on,
+.sec-tabs a:hover {
+  background: linear-gradient(135deg, var(--tp-rose), var(--tp-rose2));
+  border-color: transparent;
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .tp-hl-box {
+    flex-direction: column;
+  }
+  .tp-hl-thumbs {
+    flex-direction: row;
+    order: -1;
+  }
+  .tp-hl-cover {
+    flex-basis: 110px;
+  }
+  .tp-hl-main {
+    gap: 12px;
+    padding-left: 10px;
+  }
+  .tp-hl-info p {
+    -webkit-line-clamp: 4;
+    font-size: 13px;
+  }
+}
+
+/* ===================== IMPRINT CIRCLES (Manta-style) ===================== */
+.tp-imps {
+  margin: 6px 0 30px;
+}
+.tp-imps-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(10px, 2.4vw, 30px);
+  overflow-x: auto;
+  padding: 14px 6px 6px;
+  scrollbar-width: none;
+}
+.tp-imps-row::-webkit-scrollbar {
+  display: none;
+}
+.tp-imp-c {
+  flex: 0 0 auto;
+  width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--tp-mute);
+  font-family: "DM Sans", sans-serif;
+  transition: color 0.2s;
+}
+.tp-imp-c b {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.25;
+}
+.tp-imp-dot {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  color: var(--ink, #fff);
+  background: radial-gradient(
+    circle at 30% 25%,
+    color-mix(in srgb, var(--c) 100%, #fff 25%),
+    var(--c)
+  );
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c) 40%, transparent);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s;
+}
+.tp-imp-dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: 0.3s;
+}
+.tp-imp-c:hover {
+  color: var(--tp-text);
+}
+.tp-imp-c:hover .tp-imp-dot {
+  transform: translateY(-6px) scale(1.08) rotate(-4deg);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--c) 55%, transparent);
+}
+.tp-imp-c:hover .tp-imp-dot::after,
+.tp-imp-c.on .tp-imp-dot::after {
+  opacity: 1;
+  transform: scale(1);
+}
+.tp-imp-c.on {
+  color: var(--tp-text);
+}
+.tp-imp-c:active .tp-imp-dot {
+  transform: scale(0.94);
+}
+
+/* ============================ ANIMATIONS ============================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+.reveal.in .tp-card,
+.reveal.in .tp-gt,
+.reveal.in .tp-imp-c {
+  animation: tpCardIn 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.reveal.in .tp-card:nth-child(1),
+.reveal.in .tp-imp-c:nth-child(1) {
+  animation-delay: 0.03s;
+}
+.reveal.in .tp-card:nth-child(2),
+.reveal.in .tp-imp-c:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.reveal.in .tp-card:nth-child(3),
+.reveal.in .tp-imp-c:nth-child(3) {
+  animation-delay: 0.13s;
+}
+.reveal.in .tp-card:nth-child(4),
+.reveal.in .tp-imp-c:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.reveal.in .tp-card:nth-child(5),
+.reveal.in .tp-imp-c:nth-child(5) {
+  animation-delay: 0.23s;
+}
+.reveal.in .tp-card:nth-child(6),
+.reveal.in .tp-imp-c:nth-child(6) {
+  animation-delay: 0.28s;
+}
+.reveal.in .tp-card:nth-child(7),
+.reveal.in .tp-imp-c:nth-child(7) {
+  animation-delay: 0.33s;
+}
+.reveal.in .tp-card:nth-child(n + 8) {
+  animation-delay: 0.38s;
+}
+@keyframes tpCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* cards: lift + glow in the imprint colour */
+.tp-card {
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.tp-card:hover {
+  transform: translateY(-6px);
+}
+.tp-card:hover .tp-cover {
+  box-shadow: 0 12px 26px
+    color-mix(in srgb, var(--acc, #c9a84c) 45%, transparent);
+}
+.tp-cover {
+  transition: box-shadow 0.3s;
+}
+
+/* hero: slow zoom + title slide-up */
+.tp-slide.on img {
+  animation: tpKen 9s ease-out forwards;
+}
+.tp-slide.on .tp-stext {
+  animation: tpUp 0.7s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes tpKen {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+@keyframes tpUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* rank badge pop, highlight swap, genre tiles, buttons */
+.tp-rank {
+  animation: tpPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes tpPop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.tp-hl-main > * {
+  animation: tpUp 0.5s both;
+}
+.tp-hl-info {
+  animation-delay: 0.08s;
+}
+.tp-hl-cover {
+  transition: transform 0.4s;
+}
+.tp-hl-cover:hover {
+  transform: rotate(-2deg) scale(1.04);
+}
+.tp-gt i {
+  transition: transform 0.3s;
+}
+.tp-gt:hover i {
+  transform: scale(1.25) rotate(-8deg);
+}
+.tp-btn,
+.tp-chip,
+.tp-day,
+.tp-promo {
+  transition:
+    transform 0.2s,
+    filter 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+.tp-btn:hover,
+.tp-promo:hover {
+  transform: translateY(-2px);
+}
+.tp-btn:active,
+.tp-chip:active,
+.tp-day:active {
+  transform: scale(0.96);
+}
+.tp-promo i {
+  transition: transform 0.4s;
+}
+.tp-promo:hover i {
+  transform: rotate(12deg) scale(1.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .tp-card,
+  .tp-imp-dot,
+  .tp-slide img,
+  .tp-stext {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+@media (max-width: 600px) {
+  .tp-imps-row {
+    justify-content: flex-start;
+  }
+  .tp-imp-c {
+    width: 78px;
+  }
+  .tp-imp-dot {
+    width: 62px;
+    height: 62px;
+    font-size: 25px;
+  }
+}
+
+/* ===================== SECTION PAGES (Comics / Manga / Novel): tighter, no 2nd nav ===================== */
+.sec-tabs {
+  display: none !important;
+} /* duplicate of the top nav */
+.sec-head {
+  margin: 0 0 4px;
+}
+.sec-head h1 {
+  font-size: clamp(24px, 3.4vw, 32px);
+}
+.sec-head p {
+  margin: 4px 0 10px;
+}
+.tp-allhead {
+  margin-bottom: 2px;
+}
+.tp-note {
+  margin: 0 0 8px;
+}
+.tp-filters .tp-lbl {
+  margin: 8px 0 4px;
+}
+.tp-grid {
+  gap: 14px 12px;
+}
+.tp-all {
+  margin-bottom: 18px;
+}
+.tp-card .tp-cover {
+  border-radius: 12px;
+}
