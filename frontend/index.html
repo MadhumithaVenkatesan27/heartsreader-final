@@ -1477,10 +1477,8 @@
             </svg>
           </button>
         </div>
-        <a href="my-library.html" class="btn-nav-ghost btn-nav-lib"
-          >Library</a
-        >
-        
+        <a href="my-library.html" class="btn-nav-ghost btn-nav-lib">Library</a>
+
         <a href="account.html" class="btn-nav-ghost">My Account</a>
         <button
           class="btn-nav-signin"
@@ -2414,6 +2412,7 @@
       /* ---------- IMPRINT CIRCLES ----------
    s = same logo in both themes, d/l = dark-mode / light-mode versions.
    Studio Hearts has no logo yet, so it keeps its icon. */
+
       const IMP_LOGO = {
         q: { s: "Images/imprint-queen.png" },
         k: { s: "Images/imprint-king.png" },
@@ -2430,8 +2429,12 @@
           d: "Images/imprint-novelpress-dark.png",
           l: "Images/imprint-novelpress-light.png",
         },
+        sh: {
+          d: "Images/imprint-studio-dark.png",
+          l: "Images/imprint-studio-light.png",
+        },
       };
-      const IMP_ICON = { sh: "ti-building-castle" }; /* icon-only imprints */
+      const IMP_ICON = {}; /* no icon-only imprints now */
 
       function imprintLogoHTML(i) {
         const L = IMP_LOGO[i];

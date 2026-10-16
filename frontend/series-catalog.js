@@ -7,11 +7,11 @@ const PRINT_URL = "https://thecrossedhearts.com/";
 const IMP = {
   q: ["Queen of Hearts", "#e0003c", "#fff"],
   k: ["King of Spades", "#0080f5", "#fff"],
-  d: ["Ace of Diamond", "#a736ff", "#fff"],
+  d: ["Ace of Diamond", "#2dba1e", "#fff"],
   bl: ["Blush Club", "#e6168c", "#fff"],
   gl: ["Glam Beat", "#ffe000", "#1a1208"],
   np: ["A Novel Press", "#e8651f", "#fff"],
-  sh: ["Studio Hearts", "#8b2d42", "#fff"],
+  sh: ["Studio Hearts", "#8b41d8", "#fff"],
 };
 
 /* R(key, imprint, oldPage, cover, title, genre, age, digital price, print price, shelf badge, new-release badge, carousel banner, extras{ch}) */
