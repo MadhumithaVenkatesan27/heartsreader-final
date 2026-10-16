@@ -14,6 +14,7 @@ const { validate, z } = require('../utils/validate');
 const { ok } = require('../utils/respond');
 const { optionalAuth } = require('../middleware/auth');
 const brevo = require('../services/brevo');
+const { sendMail } = require('../utils/mailer');
 
 router.use(rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -57,10 +58,23 @@ router.post('/subscribe', optionalAuth, validate(subscribeBody), async (req, res
   if (req.user) doc.userId = req.user._id;
   if (email) doc.email = email;
   if (b.general) doc.general = true;
+
+  let isNew = false;
   if (!doc.titles.some((t) => t.titleId === b.titleId && t.volume === b.volume)) {
     doc.titles.push({ titleId: b.titleId, titleName: b.titleName, volume: b.volume, releaseDate: b.releaseDate || undefined });
+    isNew = true;
   }
   await doc.save();
+
+  // instant confirmation email, only the first time for this title + volume
+  if (email && isNew) {
+    sendMail({
+      to: email,
+      subject: `You're on the list for ${b.titleName || 'this title'}`,
+      text: `Hi!\n\nYou're on the list. We'll email you when ${b.titleName || 'this title'} is available.\n\n- Crossed Hearts`,
+    }).catch((err) => console.warn('notify confirmation email failed:', err.message)); // fire and forget
+  }
+
   if (b.general && email) brevo.syncNewsOptIn(email, req.user?.name); // fire and forget
   ok(res, { saved: true, push: !!endpoint });
 });
