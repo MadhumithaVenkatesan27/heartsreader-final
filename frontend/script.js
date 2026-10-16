@@ -22,7 +22,7 @@ function chResolveApiUrl() {
 
   if (isLocal) return "http://localhost:5000/api";
   if (window.CH_API_URL) return String(window.CH_API_URL).replace(/\/$/, "");
-  return "https://crossed-hearts-final.onrender.com/api";
+  return "https://heartsreader-backend.onrender.com/api";
 }
 const CH_API_URL = chResolveApiUrl();
 let CH_STRIPE = null;
