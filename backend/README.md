@@ -33,7 +33,7 @@ Do these once, in order. Every command is run in the backend folder.
 
 ```powershell
 # 0. Open the folder
-cd D:\SourceCode\winterberry\crossedhearts\crossed-hearts-final\crossed-hearts-backend
+cd D:\SourceCode\winterberry\crossedhearts\heartsreader-backend.onrender.com\crossed-hearts-backend
 
 # 1. Install packages
 npm install
