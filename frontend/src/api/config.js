@@ -3,7 +3,6 @@ const LOCAL_API = "http://localhost:5000/api";
 
 const BASE_URL = (() => {
   if (typeof window === "undefined") return LOCAL_API;
-  // Optional manual override (set window.CH_API_URL before this script loads)
   if (window.CH_API_URL) return window.CH_API_URL;
   const host = window.location.hostname;
   const isLocal =
