@@ -4,6 +4,7 @@
   "description": "Crossed Hearts / Heartsreader API",
   "main": "src/index.js",
   "scripts": {
+    "seed-titles": "node scripts/seed-titles.js",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "seed": "node scripts/seed.js",

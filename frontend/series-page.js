@@ -1221,7 +1221,10 @@
       if (typeof openAuth === "function") openAuth("in");
     },
     lib() {
-      if (chToggleSeriesLib(C.id) !== null) libPaint();
+      if (chToggleSeriesLib(C.id) !== null) {
+        libPaint();
+        libSync();
+      }
     },
     more() {
       showDetails(S.vol);
@@ -1354,6 +1357,38 @@
     } catch (e) {}
   };
 
+  /* ---- Add to library: also saved on the server for signed-in readers ---- */
+  function libReq(method, path) {
+    const hd =
+      typeof chAuthHeaders === "function"
+        ? chAuthHeaders()
+        : { "Content-Type": "application/json" };
+    return fetch(nApi() + "/saved" + path, { method, headers: hd })
+      .then((r) => r.json())
+      .catch(() => null);
+  }
+  const libId = () => encodeURIComponent(String(C.id).toLowerCase());
+  function libSync() {
+    if (!hasToken()) return;
+    libReq(inLib() ? "POST" : "DELETE", "/" + libId());
+  }
+  /* on page load: make this browser and the account agree (works across devices) */
+  async function libPull() {
+    if (!hasToken() || !hasDigital) return;
+    const r = await libReq("GET", "");
+    const list = r && r.data && r.data.saved;
+    if (!Array.isArray(list)) return;
+    const onServer = list.some((x) => x.titleId === String(C.id).toLowerCase());
+    if (onServer && !inLib()) {
+      if (typeof chToggleSeriesLib === "function") {
+        chToggleSeriesLib(C.id);
+        libPaint();
+      }
+    } else if (!onServer && inLib()) {
+      libReq("POST", "/" + libId());
+    }
+  }
+
   /* ---- init ---- */
   const root = $("tpRoot");
   if (!hasDigital) $("tp").dataset.tab = "all";
@@ -1363,6 +1398,7 @@
   libPaint();
   nCheckReleased();
   restoreProgress();
+  libPull();
   /* print.html links here with "#print": land on the print editions */
   if (location.hash === "#print")
     setTimeout(() => actions.jump({ dataset: { t: "tpPrint" } }), 450);

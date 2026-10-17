@@ -67,25 +67,56 @@ router.get('/:idOrSlug', optionalAuth, async (req, res) => {
   ok(res, { book: out });
 });
 
-router.get('/:idOrSlug/reviews', async (req, res) => {
-  const book = await findBook(req.params.idOrSlug);
-  const reviews = await Review.find({ bookId: book._id }).sort({ createdAt: -1 }).limit(100).populate('userId', 'name');
-  ok(res, { ratingAverage: book.ratingAverage, ratingCount: book.ratingCount, reviews });
+// ── Ratings & reviews ────────────────────────────────────
+/** "Maya Rao" -> "Maya R." (readers' full names are never shown publicly) */
+const shortName = (n) => {
+  const p = String(n || '').trim().split(/\s+/).filter(Boolean);
+  return !p.length ? 'Reader' : p.length === 1 ? p[0] : `${p[0]} ${p[p.length - 1][0].toUpperCase()}.`;
+};
+const reviewOut = (r) => ({
+  _id: r._id, id: r._id, rating: r.rating, comment: r.comment, text: r.comment,
+  name: shortName(r.userId && r.userId.name), userId: r.userId && r.userId._id ? r.userId._id : r.userId,
+  date: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
+  createdAt: r.createdAt, updatedAt: r.updatedAt,
 });
-
-// One review per user per title; posting again updates it
-router.post('/:idOrSlug/reviews', authenticate, validate(z.object({ rating: z.coerce.number().int().min(1).max(5), comment: z.string().trim().max(600).default('') })), async (req, res) => {
-  const book = await findBook(req.params.idOrSlug);
-  const review = await Review.findOneAndUpdate(
-    { bookId: book._id, userId: req.user._id },
-    { rating: req.body.rating, comment: req.body.comment },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
-  );
+async function recalcRating(book) {
   const [agg] = await Review.aggregate([{ $match: { bookId: book._id } }, { $group: { _id: null, avg: { $avg: '$rating' }, n: { $sum: 1 } } }]);
   book.ratingAverage = Math.round((agg?.avg || 0) * 10) / 10;
   book.ratingCount = agg?.n || 0;
   await book.save();
-  ok(res, { review, ratingAverage: book.ratingAverage, ratingCount: book.ratingCount }, { message: 'Review submitted.' }, 201);
+}
+
+router.get('/:idOrSlug/reviews', optionalAuth, async (req, res) => {
+  const book = await findBook(req.params.idOrSlug);
+  const rows = await Review.find({ bookId: book._id }).sort({ createdAt: -1 }).limit(100).populate('userId', 'name');
+  const reviews = rows.map(reviewOut);
+  const mine = req.user ? reviews.find((r) => String(r.userId) === String(req.user._id)) || null : null;
+  ok(res, { ratingAverage: book.ratingAverage, ratingCount: book.ratingCount, reviews, mine });
+});
+
+// One review per user per title; posting again updates it
+router.post('/:idOrSlug/reviews', authenticate, validate(z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().trim().max(600).optional(),
+  text: z.string().trim().max(600).optional(), // the frontend may call it "text"
+})), async (req, res) => {
+  const book = await findBook(req.params.idOrSlug);
+  const comment = req.body.comment ?? req.body.text ?? '';
+  const review = await Review.findOneAndUpdate(
+    { bookId: book._id, userId: req.user._id },
+    { rating: req.body.rating, comment },
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+  );
+  await recalcRating(book);
+  ok(res, { review: reviewOut({ ...review.toObject(), userId: { _id: req.user._id, name: req.user.name } }), ratingAverage: book.ratingAverage, ratingCount: book.ratingCount }, { message: 'Review submitted.' }, 201);
+});
+
+// Remove your own review
+router.delete('/:idOrSlug/reviews', authenticate, async (req, res) => {
+  const book = await findBook(req.params.idOrSlug);
+  await Review.deleteOne({ bookId: book._id, userId: req.user._id });
+  await recalcRating(book);
+  ok(res, { ratingAverage: book.ratingAverage, ratingCount: book.ratingCount }, { message: 'Review removed.' });
 });
 
 module.exports = router;
