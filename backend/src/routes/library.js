@@ -27,6 +27,7 @@ const ReadEvent = require("../models/ReadEvent");
 const ReadingProgress = require("../models/ReadingProgress");
 const Bookmark = require("../models/Bookmark");
 const mongoose = require("mongoose");
+const storage = require("../services/storage");
 const { watermarkPdf, makeWatermarkId } = require("../services/watermark");
 const AppError = require("../utils/AppError");
 const { validate, z } = require("../utils/validate");
@@ -333,8 +334,8 @@ router.get("/purchases/:id/invoice.pdf", async (req, res) => {
 async function sendChapterPdf(req, res, book, chapter) {
   const full = await Book.findById(book._id).select("+chapters.pdfFile");
   const file = full?.chapters.id(chapter._id)?.pdfFile;
-  const abs = file && path.join(config.uploadsDir, path.basename(file));
-  if (!abs || !fs.existsSync(abs))
+  const original = file ? await storage.get(file) : null;
+  if (!original)
     throw new AppError("This chapter has no file yet.", 404, "NO_FILE");
   await Book.updateOne({ _id: book._id }, { $inc: { "analytics.reads": 1 } });
   res.set({
@@ -351,7 +352,7 @@ async function sendChapterPdf(req, res, book, chapter) {
     .sort((a, b) => a.order - b.order)
     .map((c) => `Ch${c.order}`);
   const watermarkId = makeWatermarkId(req.user._id, chapter._id);
-  const buf = await watermarkPdf(abs, {
+  const buf = await watermarkPdf(original, {
     name: req.user.name,
     email: req.user.email,
     bookTitle: book.title,
