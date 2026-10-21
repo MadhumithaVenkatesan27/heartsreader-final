@@ -1692,12 +1692,9 @@
           backUrl: "chigaya-vol1.html",
           volumePrice: 7.99,
           chapters: [
-            chap(
-              "ch1",
-              "Chapter 1 - chapter name",
-              true,
-              "assets/chigaya-v1-ch1.pdf",
-            ),
+            chap("ch1", "Chapter 1 - chapter name", true, null, {
+              bookId: "chigaya-v1",
+            }),
             chap("ch2", "Chapter 2 - chapter name", false, SAMPLE),
             chap("ch3", "Chapter 3 - chapter name", false, SAMPLE),
             chap("ch4", "Chapter 4 - chapter name", false, SAMPLE),
@@ -2241,7 +2238,7 @@
               chHydrateUserFromLocalCache();
             await chRestoreSessionFromToken();
             const token = sessionStorage.getItem("ch_token");
-            if (!ch.free && (!CH_USER || !token)) {
+            if (!CH_USER || !token) {
               sessionStorage.setItem(
                 "ch_after_read",
                 JSON.stringify({ title: currentTitle, ch: currentCh }),
@@ -2324,10 +2321,7 @@
                 free: Boolean(ch.free),
                 message: errorMessage,
               });
-              if (
-                !ch.free &&
-                (response.status === 401 || response.status === 403)
-              ) {
+              if (response.status === 401 || response.status === 403) {
                 sessionStorage.removeItem("ch_token");
                 localStorage.removeItem("ch_user_persist");
                 sessionStorage.removeItem("ch_user");
