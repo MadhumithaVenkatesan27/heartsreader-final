@@ -1611,9 +1611,9 @@
         "thecrossedhearts.com",
         "www.thecrossedhearts.com",
       ].includes(window.location.hostname)
-        ? "https://heartsreader-backend.onrender.com.onrender.com/api"
+        ? "https://heartsreader-backend.onrender.com/api"
         : window.location.hostname === "crossed-hearts.onrender.com"
-          ? "https://heartsreader-backend.onrender.com.onrender.com/api"
+          ? "https://heartsreader-backend.onrender.com/api"
           : ["localhost", "127.0.0.1", ""].includes(window.location.hostname) ||
               window.location.protocol === "file:"
             ? "http://localhost:5000/api"
@@ -2258,14 +2258,14 @@
                 (["thecrossedhearts.com", "www.thecrossedhearts.com"].includes(
                   location.hostname,
                 )
-                  ? "https://heartsreader-backend.onrender.com.onrender.com/api"
+                  ? "https://heartsreader-backend.onrender.com/api"
                   : location.hostname === "crossed-hearts.onrender.com"
-                    ? "https://heartsreader-backend.onrender.com.onrender.com/api"
+                    ? "https://heartsreader-backend.onrender.com/api"
                     : ["localhost", "127.0.0.1", ""].includes(
                           location.hostname,
                         ) || location.protocol === "file:"
                       ? "http://localhost:5000/api"
-                      : "https://heartsreader-backend.onrender.com.onrender.com/api")
+                      : "https://heartsreader-backend.onrender.com/api")
               ).replace(/\/$/, "");
               const tokenResponse = await fetch(
                 `${apiBase}/library/${ch.bookId}/read-token/${ch.id || currentCh}`,
@@ -2288,14 +2288,14 @@
               (["thecrossedhearts.com", "www.thecrossedhearts.com"].includes(
                 location.hostname,
               )
-                ? "https://heartsreader-backend.onrender.com.onrender.com/api"
+                ? "https://heartsreader-backend.onrender.com/api"
                 : location.hostname === "crossed-hearts.onrender.com"
-                  ? "https://heartsreader-backend.onrender.com.onrender.com/api"
+                  ? "https://heartsreader-backend.onrender.com/api"
                   : ["localhost", "127.0.0.1", ""].includes(
                         location.hostname,
                       ) || location.protocol === "file:"
                     ? "http://localhost:5000/api"
-                    : "https://heartsreader-backend.onrender.com.onrender.com/api")
+                    : "https://heartsreader-backend.onrender.com/api")
             ).replace(/\/$/, "");
             const readUrl = new URL(
               `${apiBase}/library/${ch.bookId}/${readerEndpoint}/${ch.id || currentCh}`,
@@ -2342,6 +2342,17 @@
             const pdfUrl = URL.createObjectURL(pdfBlob);
             pdfDoc = await pdfjsLib.getDocument({ url: pdfUrl }).promise;
           } else {
+            if (typeof chHydrateUserFromLocalCache === "function")
+              chHydrateUserFromLocalCache();
+            await chRestoreSessionFromToken();
+            if (!CH_USER || !sessionStorage.getItem("ch_token")) {
+              sessionStorage.setItem(
+                "ch_after_read",
+                JSON.stringify({ title: currentTitle, ch: currentCh }),
+              );
+              openAuth();
+              return;
+            }
             pdfDoc = await pdfjsLib.getDocument({ url: ch.pdfSrc }).promise;
           }
           const startPage = ch.pageStart || 1;
