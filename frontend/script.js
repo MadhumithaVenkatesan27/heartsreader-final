@@ -2529,7 +2529,7 @@ function renderStripePaymentSection(price) {
         <div id="stripeCardElement" class="form-input" style="padding:15px 14px;min-height:50px"></div>
         <div id="stripeCardError" style="color:#e06565;font-size:12px;margin-top:8px"></div>
       </div>
-      <button class="btn-pay" id="payBtn" onclick="processCard($${Number(price || 0).toFixed(2)})">
+      <button class="btn-pay" id="payBtn" onclick="processCard(${Number(price || 0).toFixed(2)})">
         Pay $${Number(price || 0).toFixed(2)} - Unlock Now
       </button>
     </div>
@@ -2541,7 +2541,7 @@ function renderRazorpayPaymentSection(price) {
   return `
     <div id="razorpaySection" style="display:block;text-align:center;padding:24px 0">
       <p style="font-family:var(--font-s);font-size:16px;color:var(--muted);margin-bottom:20px">Pay securely with UPI, cards, netbanking, or wallets through Razorpay.</p>
-      <button class="btn-pay" id="razorpayBtn" style="background:#0f6fff;color:white" onclick="processRazorpay($${Number(price || 0).toFixed(2)})">Pay ${amountLabel} with Razorpay</button>
+      <button class="btn-pay" id="razorpayBtn" style="background:#0f6fff;color:white" onclick="processRazorpay(${Number(price || 0).toFixed(2)})">Pay ${amountLabel} with Razorpay</button>
     </div>
   `;
 }

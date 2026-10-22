@@ -89,7 +89,7 @@ async function createCheckout(user, { book, chapter, currency }) {
     const intent = await stripe().paymentIntents.create({
       amount: minor(amount),
       currency: 'usd',
-      automatic_payment_methods: { enabled: true },
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
       metadata: { purchaseId: String(purchase._id) },
     });
     purchase.providerPaymentId = intent.id;
