@@ -3001,6 +3001,26 @@
         }),
       ];
 
+      // ── Live chapters served from the backend (Google Drive) ───────────────
+      // For each title: reader key -> backend title id, and how many chapters are uploaded.
+      // Chapter 1 is free, the rest are paid. Change the number when you upload more chapters.
+      const LIVE_TITLES = {
+        afternoontea: { book: "afternoon", chapters: 3 },
+        timecloset: { book: "timeisa", chapters: 2 },
+        borrowing: { book: "borrowing", chapters: 4 },
+      };
+      Object.keys(LIVE_TITLES).forEach((key) => {
+        const live = LIVE_TITLES[key];
+        if (!READER_DATA[key]) return;
+        READER_DATA[key].chapters = Array.from(
+          { length: live.chapters },
+          (_, i) =>
+            chap("ch" + (i + 1), "Chapter " + (i + 1), i === 0, null, {
+              bookId: live.book,
+            }),
+        );
+      });
+
       init();
       renderAuthForm("in");
     </script>
