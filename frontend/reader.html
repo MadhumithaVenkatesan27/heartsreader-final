@@ -3005,9 +3005,10 @@
       // For each title: reader key -> backend title id, and how many chapters are uploaded.
       // Chapter 1 is free, the rest are paid. Change the number when you upload more chapters.
       const LIVE_TITLES = {
+        "chigaya-v1": { book: "chigaya-v1", chapters: 4 },
         afternoontea: { book: "afternoon", chapters: 3 },
         timecloset: { book: "timeisa", chapters: 2 },
-        borrowing: { book: "borrowing", chapters: 4 },
+        // borrowing: { book: "borrowing", chapters: 4 },  // remove the // when its PDFs are uploaded
       };
       Object.keys(LIVE_TITLES).forEach((key) => {
         const live = LIVE_TITLES[key];
