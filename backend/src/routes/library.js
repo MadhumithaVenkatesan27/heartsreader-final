@@ -344,7 +344,10 @@ async function sendChapterPdf(req, res, book, chapter) {
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
   });
-  if (!req.user) return res.sendFile(abs);
+  if (!req.user) {
+    res.set("Content-Length", String(original.length));
+    return res.end(original);
+  }
 
   const ent = await entitlements(req.user._id, book._id);
   const unlocked = book.chapters
