@@ -56,6 +56,12 @@ router.get("/payment-config", (_req, res) => {
 
 /** Free chapters can be previewed by anyone. */
 router.get("/:bookId/preview/:chapterId", optionalAuth, async (req, res) => {
+  if (!req.user)
+    throw new AppError(
+      "Please sign in or sign up to read the free preview.",
+      401,
+      "LOGIN_REQUIRED",
+    );
   const book = await findBook(req.params.bookId);
   const chapter = findChapter(book, req.params.chapterId);
   if (!chapter.free)
@@ -344,10 +350,12 @@ async function sendChapterPdf(req, res, book, chapter) {
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",
   });
-  if (!req.user) {
-    res.set("Content-Length", String(original.length));
-    return res.end(original);
-  }
+  if (!req.user)
+    throw new AppError(
+      "Please sign in or sign up to read this chapter.",
+      401,
+      "LOGIN_REQUIRED",
+    );
 
   const ent = await entitlements(req.user._id, book._id);
   const unlocked = book.chapters
