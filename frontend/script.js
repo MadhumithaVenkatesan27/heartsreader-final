@@ -260,6 +260,7 @@ function chBookKeysFromPurchase(purchase) {
   const book = purchase.bookId || {};
   const candidates = [
     book.slug,
+    ...(Array.isArray(book.aliases) ? book.aliases : []),
     book._id,
     purchase.bookId,
     purchase.bookTitle,
