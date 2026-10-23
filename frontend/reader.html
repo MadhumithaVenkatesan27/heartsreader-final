@@ -1619,7 +1619,7 @@
             ? "http://localhost:5000/api"
             : "https://heartsreader-backend.onrender.com/api";
     </script>
-    <script src="script.js?v=2"></script>
+    <script src="script.js"></script>
     <script>
       "use strict";
 
@@ -1762,7 +1762,7 @@
           chapters: stdChapters(4),
         },
         borrowing: {
-          title: "Borrowing Your Textbook",
+          title: "Borrowing Your Textbook 175160",
           backUrl: "borrowing.html",
           volumePrice: 6.99,
           chapters: stdChapters(4),
@@ -1876,7 +1876,7 @@
       // ══════════════════════════════════════════════════════════════════════════
       const params = new URLSearchParams(window.location.search);
       let currentTitle = params.get("title") || "chigaya-v1";
-      let currentCh = params.get("ch") || "ch1";
+      let currentCh = (params.get("ch") || "ch1").replace(/^ep(\d+)$/i, "ch$1"); // old links used ep1, ep2 ...
       let titleData, chIndex;
       let currentZoom = 1.0;
       let pdfDoc = null;
@@ -3005,10 +3005,10 @@
       // For each title: reader key -> backend title id, and how many chapters are uploaded.
       // Chapter 1 is free, the rest are paid. Change the number when you upload more chapters.
       const LIVE_TITLES = {
-        "chigaya-v1": { book: "chigaya-v1", chapters: 1 },
+        "chigaya-v1": { book: "chigaya-v1", chapters: 4 },
         afternoontea: { book: "afternoon", chapters: 3 },
         timecloset: { book: "timeisa", chapters: 2 },
-        borrowing: { book: "borrowing", chapters: 4 },
+        // borrowing: { book: "borrowing", chapters: 4 },  // remove the // when its PDFs are uploaded
       };
       Object.keys(LIVE_TITLES).forEach((key) => {
         const live = LIVE_TITLES[key];
@@ -3021,6 +3021,14 @@
             }),
         );
       });
+
+      // The title pages use these other names for the same titles, so they open the same chapters.
+      if (READER_DATA.timecloset)
+        READER_DATA["timeisa-v1"] = READER_DATA.timecloset;
+      if (READER_DATA.afternoontea)
+        READER_DATA["afternoon-v1"] = READER_DATA.afternoontea;
+      if (READER_DATA.borrowing)
+        READER_DATA["borrowing-v1"] = READER_DATA.borrowing;
 
       init();
       renderAuthForm("in");
