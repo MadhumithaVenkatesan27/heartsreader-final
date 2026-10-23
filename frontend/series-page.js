@@ -192,6 +192,55 @@
       <div class="tp-acc-b">${rows}</div></section>`;
   }
 
+  /* ---- what this reader has bought (from the server) ---- */
+  const OWN =
+    {}; /* volume number -> { full: boolean, ch: { 2: true, 3: true } } */
+  function ownsCh(n, num) {
+    const o = OWN[n];
+    return !!(o && (o.full || o.ch[num]));
+  }
+  function readLink(d, num) {
+    const base = d.read || "reader.html";
+    return /ch=[^&]*/.test(base)
+      ? base.replace(/ch=[^&]*/, "ch=ch" + num)
+      : base + (base.includes("?") ? "&" : "?") + "ch=ch" + num;
+  }
+  async function ownPull() {
+    if (!hasToken() || !hasDigital) return;
+    let list;
+    try {
+      const hd =
+        typeof chAuthHeaders === "function"
+          ? chAuthHeaders()
+          : { "Content-Type": "application/json" };
+      const r = await fetch(nApi() + "/library/titles", { headers: hd });
+      const j = await r.json();
+      list = j && j.data && j.data.titles;
+    } catch (e) {}
+    if (!Array.isArray(list)) return;
+    dig.forEach((n) => {
+      const d = V[n].d;
+      const key = String((d && d.key) || "").toLowerCase();
+      const t = list.find(
+        (x) =>
+          x.owned !== false &&
+          (String(x.slug || "").toLowerCase() === key ||
+            (x.aliases || [])
+              .map((a) => String(a).toLowerCase())
+              .includes(key)),
+      );
+      OWN[n] = { full: false, ch: {} };
+      if (!t) return;
+      OWN[n].full = !!t.ownsFullBook;
+      (t.chapters || []).forEach((c) => {
+        if (c.unlocked && !c.free) OWN[n].ch[c.order] = true;
+      });
+    });
+    const box = $("tpEpList");
+    if (box) box.innerHTML = chapterRows(S.vol);
+  }
+  window.chRefreshOwnership = ownPull;
+
   function chapterRows(n) {
     const v = V[n],
       d = v.d;
@@ -225,6 +274,10 @@
           return `<div class="tp-ep"><a class="tp-th" href="${d.read}"><img src="${th}" alt="" loading="lazy"></a>
             <div class="tp-et"><small>${unit} ${num}</small><b>${t}</b><span class="tp-free">Free preview</span></div>
             <div class="tp-ea"><span class="tp-ep-p">Free</span><a class="tp-ep-b rd" href="${d.read}">▶ Read</a></div></div>`;
+        if (ownsCh(n, num))
+          return `<div class="tp-ep"><a class="tp-th" href="${readLink(d, num)}"><img src="${th}" alt="" loading="lazy"></a>
+            <div class="tp-et"><small>${unit} ${num}</small><b>${t}</b><span class="tp-free">Unlocked</span></div>
+            <div class="tp-ea"><span class="tp-ep-p">Owned</span><a class="tp-ep-b rd" href="${readLink(d, num)}">▶ Read</a></div></div>`;
         return `<div class="tp-ep"><div class="tp-th lock"><img src="${th}" alt="" loading="lazy"><i class="ti ti-lock" aria-hidden="true"></i></div>
           <div class="tp-et"><small>${unit} ${num}</small><b>${t}</b></div>
           <div class="tp-ea"><span class="tp-ep-p">${usd(d.cp)}</span><button class="tp-ep-b" data-act="buych" data-n="${n}" data-i="${i}">${chapterMode === "unlock" ? "Unlock" : "Add"}</button></div></div>`;
@@ -1399,6 +1452,10 @@
   nCheckReleased();
   restoreProgress();
   libPull();
+  ownPull();
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) ownPull();
+  });
   /* print.html links here with "#print": land on the print editions */
   if (location.hash === "#print")
     setTimeout(() => actions.jump({ dataset: { t: "tpPrint" } }), 450);
