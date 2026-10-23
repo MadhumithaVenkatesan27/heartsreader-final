@@ -205,8 +205,26 @@
       ? base.replace(/ch=[^&]*/, "ch=ch" + num)
       : base + (base.includes("?") ? "&" : "?") + "ch=ch" + num;
   }
+  const OWN_CK = () => {
+    try {
+      const u = JSON.parse(sessionStorage.getItem("ch_user") || "null");
+      return "ch_own_" + String((u && u.email) || "me").toLowerCase();
+    } catch (e) {
+      return "ch_own_me";
+    }
+  };
+  function ownPaint() {
+    const box = $("tpEpList");
+    if (box) box.innerHTML = chapterRows(S.vol);
+  }
+  let ownTries = 0;
   async function ownPull() {
-    if (!hasToken() || !hasDigital) return;
+    if (!hasDigital) return;
+    /* not signed in yet (token still being restored) or server still waking: try again shortly */
+    const again = () => {
+      if (ownTries++ < 8) setTimeout(ownPull, 3000 + ownTries * 1500);
+    };
+    if (!hasToken()) return again();
     let list;
     try {
       const hd =
@@ -217,7 +235,20 @@
       const j = await r.json();
       list = j && j.data && j.data.titles;
     } catch (e) {}
-    if (!Array.isArray(list)) return;
+    if (!Array.isArray(list)) {
+      /* show what we knew last time while we retry */
+      try {
+        const old = JSON.parse(localStorage.getItem(OWN_CK()) || "{}");
+        dig.forEach((n) => {
+          const k = String((V[n].d && V[n].d.key) || "").toLowerCase();
+          if (old[k] && !OWN[n]) OWN[n] = old[k];
+        });
+        ownPaint();
+      } catch (e) {}
+      return again();
+    }
+    ownTries = 0;
+    const saveAll = {};
     dig.forEach((n) => {
       const d = V[n].d;
       const key = String((d && d.key) || "").toLowerCase();
@@ -230,14 +261,18 @@
               .includes(key)),
       );
       OWN[n] = { full: false, ch: {} };
-      if (!t) return;
-      OWN[n].full = !!t.ownsFullBook;
-      (t.chapters || []).forEach((c) => {
-        if (c.unlocked && !c.free) OWN[n].ch[c.order] = true;
-      });
+      if (t) {
+        OWN[n].full = !!t.ownsFullBook;
+        (t.chapters || []).forEach((c) => {
+          if (c.unlocked && !c.free) OWN[n].ch[c.order] = true;
+        });
+      }
+      saveAll[key] = OWN[n];
     });
-    const box = $("tpEpList");
-    if (box) box.innerHTML = chapterRows(S.vol);
+    try {
+      localStorage.setItem(OWN_CK(), JSON.stringify(saveAll));
+    } catch (e) {}
+    ownPaint();
   }
   window.chRefreshOwnership = ownPull;
 
@@ -1452,6 +1487,14 @@
   nCheckReleased();
   restoreProgress();
   libPull();
+  try {
+    const old = JSON.parse(localStorage.getItem(OWN_CK()) || "{}");
+    dig.forEach((n) => {
+      const k = String((V[n].d && V[n].d.key) || "").toLowerCase();
+      if (old[k]) OWN[n] = old[k];
+    });
+    ownPaint();
+  } catch (e) {}
   ownPull();
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) ownPull();
