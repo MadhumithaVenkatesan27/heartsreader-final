@@ -402,8 +402,24 @@
             .join("")
         : '<label style="color:var(--muted)">Nothing to filter yet</label>';
     }
-    menu("imprintMenu", "imprint", uniq("imprint"));
-    menu("formatMenu", "format", uniq("format"));
+    // every imprint is listed, even ones you own nothing from yet
+    var ALL_IMPRINTS = [
+      "Crossed Hearts",
+      "COMISMA",
+      "Queen of Hearts",
+      "King of Spades",
+      "Ace of Diamond",
+      "Blush Club",
+      "Glam Beat",
+      "A Novel Press",
+      "Studio Hearts",
+    ];
+    var imprints = ALL_IMPRINTS.slice();
+    uniq("imprint").forEach(function (v) {
+      if (imprints.indexOf(v) < 0) imprints.push(v);
+    });
+    menu("imprintMenu", "imprint", imprints);
+    if ($("formatMenu")) menu("formatMenu", "format", uniq("format"));
     updateFilterCounts();
   }
 

@@ -121,6 +121,18 @@ window.CH_CATALOG = [
     keywords: "girls love slice of life supernatural glambeat afternoon tea",
   },
   {
+    title: "Fly Over the Sea",
+    genre: "Boys' Love · Dark Romance · Omegaverse · Regression",
+    category: "Blush Club",
+    url: "flyoversea.html",
+    cover: "Images/flyoversea-cover.png",
+    price: "$22.99",
+    synopsis:
+      "A murdered gang leader gets a second chance 30 years back in time, only to find someone else with his betrayer's face waiting for him.",
+    keywords:
+      "bl boys love dark romance omegaverse regression time travel gang blushclub fly over the sea manhua",
+  },
+  {
     title: "A Gaze Like Lightning Vol.1",
     genre: "Drama · BL · Boys' Love · School Life",
     category: "Blush Club",
@@ -435,6 +447,18 @@ window.CH_CATALOG = [
       "A priestess and a vampire, both broken by hope's absence, find refuge in one another.",
     keywords:
       "print physical edition girls love glam beat supernatural drama devil vampire priestess",
+  },
+  {
+    title: "Fly Over the Sea (Print)",
+    genre: "Boys' Love · Dark Romance · Omegaverse · Regression",
+    category: "Print",
+    url: "flyoversea.html",
+    cover: "Images/flyoversea-cover.png",
+    price: "$22.99",
+    synopsis:
+      "A murdered gang leader gets a second chance 30 years back in time, only to find someone else with his betrayer's face waiting for him.",
+    keywords:
+      "print physical edition bl boys love dark romance omegaverse regression time travel gang blushclub fly over the sea manhua",
   },
   {
     title: "A Gaze Like Lightning Vol.1 (Print)",

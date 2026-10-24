@@ -289,14 +289,14 @@
           : d.full
             ? "This story is available as a complete standalone digital volume."
             : "Serialization has not started yet."
-        : "The digital edition is coming " +
-          (v.dd ? "on " + v.dd : "soon") +
+        : "Pre-order the digital edition now and read it " +
+          (v.dd ? "when it releases on " + v.dd : "as soon as it releases") +
           ".";
       const btn = d.buy
         ? `<button class="tp-b pri" data-act="addvol" data-n="${n}">${d.pre ? "Pre-Order" : "Add to Cart"} · ${usd(d.price)}</button>`
-        : "";
+        : `<button class="tp-b pri" data-act="addvol" data-n="${n}">Pre-Order · ${usd(d.price || 6)}</button>`;
       return `<div class="tp-soon"><i class="ti ti-hourglass-high" aria-hidden="true"></i>
-        <h4>${d.full && !d.pre && d.buy ? "Complete digital volume" : unit + "s coming soon"}</h4><p>${msg}</p>${btn}${!d.buy && upcoming.includes(n) ? bellBtn(n, "tp-b pri") : ""}</div>`;
+        <h4>${d.full && !d.pre && d.buy ? "Complete digital volume" : !d.buy ? "Pre-order the digital edition" : unit + "s coming soon"}</h4><p>${msg}</p>${btn}${!d.buy && upcoming.includes(n) ? bellBtn(n, "tp-b pri") : ""}</div>`;
     }
     const idx = d.chapters.map((_, i) => i);
     if (!S.asc) idx.reverse();
@@ -460,7 +460,7 @@
   const BOOKMARK = (on) =>
     `<svg viewBox="0 0 24 24" fill="${on ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
   const libInner = (on) =>
-    BOOKMARK(on) +
+    `<i class="ti ${on ? "ti-check" : "ti-plus"}" aria-hidden="true"></i>` +
     "<span>" +
     (on ? "In library" : "Add to library") +
     "</span>";
@@ -1235,7 +1235,7 @@
       d.key,
       "full",
       "Volume " + n + " - Full Volume",
-      d.price,
+      d.price || 6,
       V[n].cover,
     );
   }

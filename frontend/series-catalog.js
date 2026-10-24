@@ -296,6 +296,20 @@ R(
   "Gaze-clock-banner.png",
 );
 R(
+  "flyoversea",
+  "bl",
+  "flyoversea.html",
+  "flyoversea-cover.png",
+  "Fly Over the Sea",
+  "Boys' Love · Manhua · Dark Romance",
+  "16+",
+  "",
+  "$22.99",
+  "May 2027",
+  "",
+  "flyoversea-banner.png",
+);
+R(
   "until",
   "bl",
   "until.html",

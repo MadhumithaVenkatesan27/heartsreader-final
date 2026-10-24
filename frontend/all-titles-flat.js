@@ -111,6 +111,16 @@ const ALL_TITLES_FLAT = [
     href: "thebird.html",
   },
   {
+    id: "flyoversea",
+    title: "Fly Over the Sea",
+    genre: "Boys' Love · Manhua · Dark Romance",
+    price: 22.99,
+    bg: "linear-gradient(145deg,#2a0a24,#12040f)",
+    image: "Images/flyoversea-cover.png",
+    badge: "May 2027",
+    href: "flyoversea.html",
+  },
+  {
     id: "gaze-lightning",
     title: "A Gaze Like Lightning",
     genre: "Boys' Love · Manga · School Life",

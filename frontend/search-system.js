@@ -90,6 +90,7 @@
     inksoaked: "Glam Beat",
     devilinme: "Glam Beat",
     gaze: "Blush Club",
+    flyoversea: "Blush Club",
     thebird: "Blush Club",
     theking: "Blush Club",
     until: "Blush Club",
