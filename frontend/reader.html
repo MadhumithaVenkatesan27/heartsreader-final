@@ -214,6 +214,11 @@
         border-color: var(--rd-accent);
         color: var(--rd-accent);
       }
+      .rd-btn.on {
+        background: var(--rd-accent-dim);
+        border-color: var(--rd-accent);
+        color: var(--rd-accent);
+      }
       .rd-icon-btn {
         width: 34px;
         height: 34px;
@@ -1296,6 +1301,16 @@
       <div class="rd-bar-right">
         <button
           class="rd-btn"
+          id="bmBtn"
+          onclick="rdToggleBookmark()"
+          aria-pressed="false"
+          title="Bookmark this page"
+          aria-label="Bookmark this page"
+        >
+          <i class="ti ti-bookmark" aria-hidden="true"></i><span>Bookmark</span>
+        </button>
+        <button
+          class="rd-btn"
           id="settingsBtn"
           onclick="toggleSettings()"
           title="Reading settings"
@@ -1620,6 +1635,7 @@
             : "https://heartsreader-backend.onrender.com/api";
     </script>
     <script src="script.js"></script>
+    <script src="ch-data.js"></script>
     <script>
       "use strict";
 
@@ -2134,6 +2150,40 @@
       // ══════════════════════════════════════════════════════════════════════════
       // INIT
       // ══════════════════════════════════════════════════════════════════════════
+      // Ask the server directly whether this reader owns the chapter (the browser's own
+      // copy of your purchases can be empty right after a refresh or while Render wakes up).
+      async function serverOwns(ch) {
+        if (!ch || !ch.bookId) return false;
+        const key = String(ch.bookId).toLowerCase();
+        const alt = String(currentTitle).toLowerCase();
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            const token = sessionStorage.getItem("ch_token");
+            if (!token) return false;
+            const r = await fetch(`${CH_API_URL}/library/titles`, {
+              headers: { Authorization: "Bearer " + token },
+            });
+            if (r.status === 401 || r.status === 403) return false;
+            const j = await r.json();
+            const list = (j && j.data && j.data.titles) || [];
+            const t = list.find((x) => {
+              const ids = [x.slug]
+                .concat(x.aliases || [], x.ids || [])
+                .map((v) => String(v || "").toLowerCase());
+              return ids.includes(key) || ids.includes(alt);
+            });
+            if (!t) return false;
+            if (t.ownsFullBook) return true;
+            return (t.chapters || []).some(
+              (c) => c.key === ch.id && c.unlocked,
+            );
+          } catch (e) {
+            await new Promise((ok) => setTimeout(ok, 2500)); // server waking up: try once more
+          }
+        }
+        return false;
+      }
+
       async function init() {
         titleData = READER_DATA[currentTitle];
         if (!titleData) {
@@ -2172,7 +2222,8 @@
         const hasAccess =
           ch.free ||
           isOwned(currentTitle, ch.id) ||
-          isOwned(currentTitle, "bundle");
+          isOwned(currentTitle, "bundle") ||
+          (await serverOwns(ch));
         if (!hasAccess) {
           initPurchase(currentTitle, ch.id, ch.label, ch.price || 0.99);
           return;
@@ -2842,7 +2893,8 @@
         const hasAccess =
           ch.free ||
           isOwned(currentTitle, ch.id) ||
-          isOwned(currentTitle, "bundle");
+          isOwned(currentTitle, "bundle") ||
+          (await serverOwns(ch));
         if (!hasAccess) {
           initPurchase(currentTitle, ch.id, ch.label, ch.price || 0.99);
           return;
@@ -3032,6 +3084,151 @@
 
       init();
       renderAuthForm("in");
+    </script>
+    <script>
+      /* ── Saves your page + finished status and powers the Bookmark button ── */
+      (function () {
+        "use strict";
+        var D = window.CHData;
+        if (!D) return;
+        var best = {}; // highest % reached per chapter (this visit)
+        var saveT = null,
+          uiT = null,
+          loadedFor = "";
+
+        function tid() {
+          return String(currentTitle || "").toLowerCase();
+        }
+        function chap() {
+          return titleData && titleData.chapters[chIndex];
+        }
+        function totalPg() {
+          return pdfDoc ? pdfDoc.numPages : 0;
+        }
+        function curPage() {
+          var total = totalPg();
+          if (!total) return 1;
+          if (!isHorizMode()) {
+            var cur = 1;
+            document
+              .querySelectorAll("#readerPages .pdf-page-wrap")
+              .forEach(function (el, i) {
+                if (el.getBoundingClientRect().top < window.innerHeight * 0.5)
+                  cur = i + 1;
+              });
+            return Math.min(cur, total);
+          }
+          return Math.max(
+            1,
+            Math.min(total, Math.round((chLivePct / 100) * (total - 1)) + 1),
+          );
+        }
+
+        function saveNow() {
+          var ch = chap();
+          if (!ch || !totalPg() || !D.isSignedIn()) return;
+          var pct = chLivePct;
+          var page = curPage();
+          if (pct <= 0 && page <= 1) return; // nothing read yet
+          best[ch.id] = Math.max(best[ch.id] || 0, pct);
+          D.progress.save({
+            titleId: tid(),
+            chapterId: ch.id,
+            page: page,
+            totalPages: totalPg(),
+            percent: best[ch.id],
+            completed: best[ch.id] >= 97,
+          });
+        }
+
+        function paintBtn() {
+          var b = document.getElementById("bmBtn");
+          var ch = chap();
+          if (!b || !ch) return;
+          var on = !!D.bookmarks.find(tid(), ch.id, curPage());
+          b.classList.toggle("on", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+          b.querySelector("i").className =
+            "ti " + (on ? "ti-bookmark-filled" : "ti-bookmark");
+          b.querySelector("span").textContent = on ? "Bookmarked" : "Bookmark";
+        }
+
+        async function loadList() {
+          var key = tid();
+          if (!key || loadedFor === key || !D.isSignedIn()) return;
+          loadedFor = key;
+          try {
+            await D.bookmarks.list(key);
+          } catch (e) {
+            loadedFor = "";
+          }
+          paintBtn();
+        }
+
+        window.rdToggleBookmark = async function () {
+          var ch = chap();
+          if (!ch || !pdfDoc) return;
+          if (!D.isSignedIn()) {
+            if (typeof showToast === "function")
+              showToast("Sign in to save bookmarks.");
+            return;
+          }
+          var page = curPage();
+          var found = D.bookmarks.find(tid(), ch.id, page);
+          try {
+            if (found) {
+              await D.bookmarks.remove(found.id);
+              if (typeof showToast === "function")
+                showToast("Bookmark removed.");
+            } else {
+              await D.bookmarks.add({
+                titleId: tid(),
+                chapterId: ch.id,
+                page: page,
+                totalPages: totalPg(),
+                note: "",
+              });
+              if (typeof showToast === "function")
+                showToast("Bookmarked page " + page + ".");
+            }
+          } catch (e) {
+            if (typeof showToast === "function")
+              showToast((e && e.message) || "Could not save the bookmark.");
+          }
+          paintBtn();
+        };
+
+        // every time the reader reports progress, save it (debounced) and refresh the button
+        var orig = window.reportProgress;
+        window.reportProgress = function (pct) {
+          orig(pct);
+          clearTimeout(saveT);
+          saveT = setTimeout(saveNow, 700);
+          clearTimeout(uiT);
+          uiT = setTimeout(function () {
+            loadList();
+            paintBtn();
+          }, 150);
+        };
+
+        // open on the page asked for (bookmarks / "continue reading" links add ?page=N)
+        var want = parseInt(
+          new URLSearchParams(location.search).get("page"),
+          10,
+        );
+        if (want > 1) {
+          var tries = 0,
+            jump = setInterval(function () {
+              var wraps = document.querySelectorAll(
+                "#readerPages .pdf-page-wrap",
+              );
+              if (!isHorizMode() && wraps.length >= want) {
+                clearInterval(jump);
+                wraps[want - 1].scrollIntoView({ block: "start" });
+              } else if (++tries > 80) clearInterval(jump);
+            }, 500);
+        }
+      })();
     </script>
   </body>
 </html>

@@ -277,6 +277,25 @@
     state.titles = res[0].value;
     state.progress = res[1].status === "fulfilled" ? res[1].value : [];
     state.bookmarks = res[2].status === "fulfilled" ? res[2].value : [];
+
+    // the reader may have saved progress/bookmarks under an older id (e.g. "timeisa-v1");
+    // point them all at the title's own id so counts and "continue reading" line up
+    var canon = {};
+    state.titles.forEach(function (t) {
+      [t.titleId, t.slug]
+        .concat(t.ids || t.aliases || [])
+        .forEach(function (x) {
+          x = String(x || "").toLowerCase();
+          if (x && !canon[x]) canon[x] = t.titleId;
+        });
+    });
+    function fixId(r) {
+      var k = String(r.titleId || "").toLowerCase();
+      if (canon[k]) r.titleId = canon[k];
+      return r;
+    }
+    state.progress.forEach(fixId);
+    state.bookmarks.forEach(fixId);
     state.partialFail =
       res[1].status === "rejected" || res[2].status === "rejected";
 
